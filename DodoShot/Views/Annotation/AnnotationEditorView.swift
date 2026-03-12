@@ -221,6 +221,11 @@ struct AnnotationEditorView: View {
     @State private var isPerformingOCR = false
     @State private var ocrResult: String? = nil
     @State private var showOCRResult = false
+    @State private var isDescribingImage = false
+    @State private var aiDescriptionResult: String? = nil
+    @State private var aiDescriptionIsError = false
+    @State private var showAIDescription = false
+    @State private var hasLLMApiKey = false
 
     // HUD feedback state
     @State private var showCopiedHUD = false
@@ -448,6 +453,14 @@ struct AnnotationEditorView: View {
                     }
                 )
                 .overlay(
+                    // AI description result
+                    Group {
+                        if showAIDescription, let result = aiDescriptionResult {
+                            aiDescriptionOverlay(result: result)
+                        }
+                    }
+                )
+                .overlay(
                     // HUD feedback for copy/save actions
                     Group {
                         if showCopiedHUD || showSavedHUD {
@@ -472,6 +485,9 @@ struct AnnotationEditorView: View {
         }
         .frame(minWidth: 1100, idealWidth: showBackdropPanel ? 1300 : 1100, minHeight: 700)
         .background(Color(nsColor: .windowBackgroundColor))
+        .onAppear {
+            hasLLMApiKey = !SettingsManager.shared.settings.llmApiKey.isEmpty
+        }
     }
 
     // MARK: - Screenshot Image View
@@ -824,6 +840,60 @@ struct AnnotationEditorView: View {
         .animation(.spring(response: 0.3), value: showOCRResult)
     }
 
+    // MARK: - AI Description Overlay
+    private func aiDescriptionOverlay(result: String) -> some View {
+        VStack {
+            Spacer()
+
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: aiDescriptionIsError ? "exclamationmark.triangle.fill" : "sparkles")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundColor(aiDescriptionIsError ? .orange : .purple)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(aiDescriptionIsError ? "Description failed" : "AI description")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.primary)
+
+                    Text(result)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineLimit(4)
+
+                    if !aiDescriptionIsError {
+                        Text("Copied to clipboard")
+                            .font(.system(size: 10))
+                            .foregroundColor(.purple.opacity(0.8))
+                            .padding(.top, 2)
+                    }
+                }
+
+                Spacer()
+
+                Button(action: { showAIDescription = false }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(nsColor: .windowBackgroundColor))
+                    .shadow(color: .black.opacity(0.2), radius: 10, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+            )
+            .frame(maxWidth: 400)
+            .padding(.bottom, 80)
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .animation(.spring(response: 0.3), value: showAIDescription)
+    }
+
     // MARK: - HUD Overlay for Copy/Save Feedback
     private var hudOverlay: some View {
         VStack {
@@ -1165,6 +1235,34 @@ struct AnnotationEditorView: View {
                 .disabled(isPerformingOCR)
                 .help("Extract text from image and copy to clipboard")
 
+                // AI Describe Button
+                if hasLLMApiKey {
+                    Button(action: performAIDescribe) {
+                        HStack(spacing: 5) {
+                            if isDescribingImage {
+                                ProgressView()
+                                    .scaleEffect(0.6)
+                                    .frame(width: 12, height: 12)
+                            } else {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            Text("Describe")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.primary.opacity(0.06))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isDescribingImage)
+                    .help("Generate AI description of this screenshot")
+                }
+
                 Button(action: copyToClipboard) {
                     HStack(spacing: 5) {
                         Image(systemName: "doc.on.clipboard")
@@ -1314,6 +1412,40 @@ struct AnnotationEditorView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     withAnimation(.spring(response: 0.3)) {
                         showOCRResult = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func performAIDescribe() {
+        isDescribingImage = true
+
+        Task {
+            do {
+                let description = try await LLMService.shared.describeImage(displayImage)
+                isDescribingImage = false
+                aiDescriptionIsError = false
+                aiDescriptionResult = description
+
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(description, forType: .string)
+
+                withAnimation(.spring(response: 0.3)) {
+                    showAIDescription = true
+                }
+            } catch {
+                isDescribingImage = false
+                aiDescriptionIsError = true
+                aiDescriptionResult = error.localizedDescription
+
+                withAnimation(.spring(response: 0.3)) {
+                    showAIDescription = true
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    withAnimation(.spring(response: 0.3)) {
+                        showAIDescription = false
                     }
                 }
             }
