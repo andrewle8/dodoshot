@@ -11,7 +11,6 @@ class ScreenCaptureService: ObservableObject {
     @Published var isCapturing = false
 
     private var captureWindows: [NSWindow] = []
-    private var overlayWindow: NSWindow?
 
     private init() {}
 
@@ -603,50 +602,6 @@ class ScreenCaptureService: ObservableObject {
         NSLog("[ScreenCaptureService] showEditor returned")
     }
 
-    private func showQuickOverlay(for screenshot: Screenshot) {
-        // Use the new stacking overlay manager (CleanShot X style)
-        QuickOverlayManager.shared.showOverlay(for: screenshot)
-    }
-
-    @available(*, deprecated, message: "Use QuickOverlayManager instead")
-    private func showQuickOverlayLegacy(for screenshot: Screenshot) {
-        guard let screen = NSScreen.main else { return }
-
-        let overlaySize = NSSize(width: 320, height: 280)
-        let overlayOrigin = NSPoint(
-            x: screen.visibleFrame.maxX - overlaySize.width - 20,
-            y: screen.visibleFrame.maxY - overlaySize.height - 20
-        )
-
-        let window = NSWindow(
-            contentRect: NSRect(origin: overlayOrigin, size: overlaySize),
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false
-        )
-
-        window.level = .floating
-        window.isOpaque = false
-        window.backgroundColor = .clear
-        window.hasShadow = true
-
-        let contentView = QuickOverlayView(
-            screenshot: screenshot,
-            onDismiss: { [weak self] in
-                self?.closeOverlayWindow()
-            }
-        )
-
-        window.contentView = NSHostingView(rootView: contentView)
-        window.makeKeyAndOrderFront(nil)
-        overlayWindow = window
-
-        // Auto dismiss after 5 seconds if not interacted
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            self?.closeOverlayWindow()
-        }
-    }
-
     // MARK: - Helpers
 
     private func closeCaptureWindows() {
@@ -654,11 +609,6 @@ class ScreenCaptureService: ObservableObject {
             window.close()
         }
         captureWindows.removeAll()
-    }
-
-    private func closeOverlayWindow() {
-        overlayWindow?.close()
-        overlayWindow = nil
     }
 
     private func cancelCapture() {

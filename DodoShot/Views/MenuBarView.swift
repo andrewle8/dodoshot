@@ -414,7 +414,7 @@ struct RecentCaptureThumbnail: View {
     @State private var isHovered = false
 
     var body: some View {
-        Button(action: showQuickActions) {
+        Button(action: openInEditor) {
             ZStack(alignment: .bottomTrailing) {
                 Image(nsImage: screenshot.image)
                     .resizable()
@@ -464,8 +464,8 @@ struct RecentCaptureThumbnail: View {
         }
     }
 
-    private func showQuickActions() {
-        QuickOverlayManager.shared.showOverlay(for: screenshot)
+    private func openInEditor() {
+        AnnotationEditorWindowController.shared.showEditorAndSave(for: screenshot)
     }
 
     private func copyToClipboard() {

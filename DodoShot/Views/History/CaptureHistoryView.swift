@@ -283,7 +283,7 @@ struct CaptureHistoryView: View {
                         screenshot: screenshot,
                         isSelected: selectedScreenshot?.id == screenshot.id,
                         onSelect: { selectedScreenshot = screenshot },
-                        onDoubleClick: { openInQuickOverlay(screenshot) }
+                        onDoubleClick: { openInEditor(screenshot) }
                     )
                 }
             }
@@ -300,7 +300,7 @@ struct CaptureHistoryView: View {
                         screenshot: screenshot,
                         isSelected: selectedScreenshot?.id == screenshot.id,
                         onSelect: { selectedScreenshot = screenshot },
-                        onDoubleClick: { openInQuickOverlay(screenshot) }
+                        onDoubleClick: { openInEditor(screenshot) }
                     )
                 }
             }
@@ -353,8 +353,8 @@ struct CaptureHistoryView: View {
     }
 
     // MARK: - Actions
-    private func openInQuickOverlay(_ screenshot: Screenshot) {
-        QuickOverlayManager.shared.showOverlay(for: screenshot)
+    private func openInEditor(_ screenshot: Screenshot) {
+        AnnotationEditorWindowController.shared.showEditorAndSave(for: screenshot)
     }
 }
 
@@ -465,10 +465,6 @@ struct HistoryGridItem: View {
             }
             Button(action: { FloatingWindowService.shared.pinScreenshot(screenshot) }) {
                 Label(L10n.ContextMenu.pin, systemImage: "pin")
-            }
-            Divider()
-            Button(action: { QuickOverlayManager.shared.showOverlay(for: screenshot) }) {
-                Label("history.showOverlay".localized, systemImage: "rectangle.on.rectangle")
             }
             Divider()
             Button(role: .destructive, action: { deleteScreenshot(screenshot) }) {

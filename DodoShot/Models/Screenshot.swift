@@ -401,7 +401,7 @@ struct AppSettings: Codable {
     // Custom CodingKeys - exclude llmApiKey as it's computed
     enum CodingKeys: String, CodingKey {
         case anthropicApiKey, openaiApiKey, llmProvider, saveLocation, autoCopyToClipboard
-        case showQuickOverlay, quickOverlayAutoDismiss, quickOverlayTimeout, hideDesktopIcons
+        case hideDesktopIcons
         case hotkeys, appearanceMode, launchAtStartup, imageFormat, jpgQuality, webpQuality
         case defaultAnnotationColor, defaultStrokeWidth, defaultAnnotationTool
         case textAnnotationSettings, filenameTemplate, sequentialNumber
@@ -439,9 +439,6 @@ struct AppSettings: Codable {
         llmProvider = try container.decodeIfPresent(LLMProvider.self, forKey: .llmProvider) ?? .anthropic
         saveLocation = try container.decode(String.self, forKey: .saveLocation)
         autoCopyToClipboard = try container.decode(Bool.self, forKey: .autoCopyToClipboard)
-        showQuickOverlay = try container.decode(Bool.self, forKey: .showQuickOverlay)
-        quickOverlayAutoDismiss = try container.decodeIfPresent(Bool.self, forKey: .quickOverlayAutoDismiss) ?? true
-        quickOverlayTimeout = try container.decodeIfPresent(Double.self, forKey: .quickOverlayTimeout) ?? 5.0
         hideDesktopIcons = try container.decode(Bool.self, forKey: .hideDesktopIcons)
         hotkeys = try container.decode(HotkeySettings.self, forKey: .hotkeys)
         appearanceMode = try container.decode(AppearanceMode.self, forKey: .appearanceMode)
@@ -473,9 +470,6 @@ struct AppSettings: Codable {
         try container.encode(llmProvider, forKey: .llmProvider)
         try container.encode(saveLocation, forKey: .saveLocation)
         try container.encode(autoCopyToClipboard, forKey: .autoCopyToClipboard)
-        try container.encode(showQuickOverlay, forKey: .showQuickOverlay)
-        try container.encode(quickOverlayAutoDismiss, forKey: .quickOverlayAutoDismiss)
-        try container.encode(quickOverlayTimeout, forKey: .quickOverlayTimeout)
         try container.encode(hideDesktopIcons, forKey: .hideDesktopIcons)
         try container.encode(hotkeys, forKey: .hotkeys)
         try container.encode(appearanceMode, forKey: .appearanceMode)
@@ -499,9 +493,6 @@ struct AppSettings: Codable {
         try container.encode(saveHistory, forKey: .saveHistory)
     }
     var autoCopyToClipboard: Bool
-    var showQuickOverlay: Bool
-    var quickOverlayAutoDismiss: Bool  // Auto-dismiss overlay after timeout
-    var quickOverlayTimeout: Double  // Seconds before auto-dismiss (0 = never)
     var hideDesktopIcons: Bool
     var hotkeys: HotkeySettings
     var appearanceMode: AppearanceMode
@@ -531,9 +522,6 @@ struct AppSettings: Codable {
         llmProvider: LLMProvider,
         saveLocation: String,
         autoCopyToClipboard: Bool,
-        showQuickOverlay: Bool,
-        quickOverlayAutoDismiss: Bool,
-        quickOverlayTimeout: Double,
         hideDesktopIcons: Bool,
         hotkeys: HotkeySettings,
         appearanceMode: AppearanceMode,
@@ -561,9 +549,6 @@ struct AppSettings: Codable {
         self.llmProvider = llmProvider
         self.saveLocation = saveLocation
         self.autoCopyToClipboard = autoCopyToClipboard
-        self.showQuickOverlay = showQuickOverlay
-        self.quickOverlayAutoDismiss = quickOverlayAutoDismiss
-        self.quickOverlayTimeout = quickOverlayTimeout
         self.hideDesktopIcons = hideDesktopIcons
         self.hotkeys = hotkeys
         self.appearanceMode = appearanceMode
@@ -597,9 +582,6 @@ struct AppSettings: Codable {
             llmProvider: .anthropic,
             saveLocation: screenshotsPath,
             autoCopyToClipboard: true,
-            showQuickOverlay: true,
-            quickOverlayAutoDismiss: true,
-            quickOverlayTimeout: 5.0,
             hideDesktopIcons: false,
             hotkeys: .default,
             appearanceMode: .dark,

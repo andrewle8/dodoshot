@@ -92,8 +92,6 @@ enum L10n {
         static let capture = "settings.capture".localized
         static let autoCopy = "settings.autoCopy".localized
         static let autoCopyDescription = "settings.autoCopy.description".localized
-        static let showOverlay = "settings.showOverlay".localized
-        static let showOverlayDescription = "settings.showOverlay.description".localized
         static let hideDesktopIcons = "settings.hideDesktopIcons".localized
         static let hideDesktopIconsDescription = "settings.hideDesktopIcons.description".localized
         static let storage = "settings.storage".localized

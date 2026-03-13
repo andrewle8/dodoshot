@@ -135,16 +135,6 @@ struct GeneralSettingsTab: View {
                             .padding(.horizontal, -16)
 
                         SettingsToggleRow(
-                            icon: "rectangle.on.rectangle",
-                            title: L10n.Settings.showOverlay,
-                            description: L10n.Settings.showOverlayDescription,
-                            isOn: $settingsManager.settings.showQuickOverlay
-                        )
-
-                        Divider()
-                            .padding(.horizontal, -16)
-
-                        SettingsToggleRow(
                             icon: "desktopcomputer",
                             title: L10n.Settings.hideDesktopIcons,
                             description: L10n.Settings.hideDesktopIconsDescription,

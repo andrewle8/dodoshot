@@ -15,7 +15,6 @@
 		A000000006 /* HotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000006 /* HotkeyManager.swift */; };
 		A000000007 /* AreaSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000007 /* AreaSelectionView.swift */; };
 		A000000008 /* WindowSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000008 /* WindowSelectionView.swift */; };
-		A000000009 /* QuickOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000009 /* QuickOverlayView.swift */; };
 		A000000010 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000010 /* SettingsView.swift */; };
 		A000000011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B000000011 /* Assets.xcassets */; };
 		A000000012 /* AnnotationEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000014 /* AnnotationEditorView.swift */; };
@@ -31,6 +30,7 @@
 		D2A3B4C5D6E7F8A9B0C1D2E3 /* DesktopIconsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4D5E6F7A8B9C0D1E2 /* DesktopIconsService.swift */; };
 		H2A3B4C5D6E7F8A9B0C1D2E3 /* CaptureHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = H1A2B3C4D5E6F7A8B9C0D1E2 /* CaptureHistoryView.swift */; };
 		L1A2B3C4D5E6F7A8B9C0D1E2 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = L0A1B2C3D4E5F6A7B8C9D0E1 /* Localization.swift */; };
+		VEB1A2B3C4D5E6F7A8B9C0D1 /* VisualEffectBlur.swift in Sources */ = {isa = PBXBuildFile; fileRef = VEB0A1B2C3D4E5F6A7B8C9D0 /* VisualEffectBlur.swift */; };
 		W1A2B3C4D5E6F7A8B9C0D1E2 /* WindowInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = W0A1B2C3D4E5F6A7B8C9D0E1 /* WindowInfo.swift */; };
 		EN2A3B4C5D6E7F8A9B0C1D2E /* en.lproj in Resources */ = {isa = PBXBuildFile; fileRef = EN1A2B3C4D5E6F7A8B9C0D1E /* en.lproj */; };
 		TR2A3B4C5D6E7F8A9B0C1D2E /* tr.lproj in Resources */ = {isa = PBXBuildFile; fileRef = TR1A2B3C4D5E6F7A8B9C0D1E /* tr.lproj */; };
@@ -50,7 +50,6 @@
 		B000000006 /* HotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyManager.swift; sourceTree = "<group>"; };
 		B000000007 /* AreaSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreaSelectionView.swift; sourceTree = "<group>"; };
 		B000000008 /* WindowSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowSelectionView.swift; sourceTree = "<group>"; };
-		B000000009 /* QuickOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickOverlayView.swift; sourceTree = "<group>"; };
 		B000000010 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B000000011 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B000000012 /* DodoShot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DodoShot.entitlements; sourceTree = "<group>"; };
@@ -68,6 +67,7 @@
 		D1A2B3C4D5E6F7A8B9C0D1E2 /* DesktopIconsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopIconsService.swift; sourceTree = "<group>"; };
 		H1A2B3C4D5E6F7A8B9C0D1E2 /* CaptureHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureHistoryView.swift; sourceTree = "<group>"; };
 		L0A1B2C3D4E5F6A7B8C9D0E1 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		VEB0A1B2C3D4E5F6A7B8C9D0 /* VisualEffectBlur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectBlur.swift; sourceTree = "<group>"; };
 		EN1A2B3C4D5E6F7A8B9C0D1E /* en.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = en.lproj; sourceTree = "<group>"; };
 		TR1A2B3C4D5E6F7A8B9C0D1E /* tr.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tr.lproj; sourceTree = "<group>"; };
 		FR1A2B3C4D5E6F7A8B9C0D1E /* fr.lproj */ = {isa = PBXFileReference; lastKnownFileType = folder; path = fr.lproj; sourceTree = "<group>"; };
@@ -186,7 +186,6 @@
 		D000000009 /* Overlay */ = {
 			isa = PBXGroup;
 			children = (
-				B000000009 /* QuickOverlayView.swift */,
 				WH1A2B3C4D5E6F7A8B9C0D1E /* WelcomeHUDView.swift */,
 			);
 			path = Overlay;
@@ -228,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				L0A1B2C3D4E5F6A7B8C9D0E1 /* Localization.swift */,
+				VEB0A1B2C3D4E5F6A7B8C9D0 /* VisualEffectBlur.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -318,7 +318,6 @@
 				A000000006 /* HotkeyManager.swift in Sources */,
 				A000000007 /* AreaSelectionView.swift in Sources */,
 				A000000008 /* WindowSelectionView.swift in Sources */,
-				A000000009 /* QuickOverlayView.swift in Sources */,
 				A000000010 /* SettingsView.swift in Sources */,
 				A000000012 /* AnnotationEditorView.swift in Sources */,
 				A000000013 /* OCRService.swift in Sources */,
@@ -331,6 +330,7 @@
 				D2A3B4C5D6E7F8A9B0C1D2E3 /* DesktopIconsService.swift in Sources */,
 				H2A3B4C5D6E7F8A9B0C1D2E3 /* CaptureHistoryView.swift in Sources */,
 				L1A2B3C4D5E6F7A8B9C0D1E2 /* Localization.swift in Sources */,
+				VEB1A2B3C4D5E6F7A8B9C0D1 /* VisualEffectBlur.swift in Sources */,
 				W1A2B3C4D5E6F7A8B9C0D1E2 /* WindowInfo.swift in Sources */,
 				IFA000001 /* ImageFormatAnalyzer.swift in Sources */,
 				LAA000001 /* LaunchAtLoginManager.swift in Sources */,
@@ -479,7 +479,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.2;
+				MARKETING_VERSION = 1.4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dodoshot.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -509,7 +509,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.4.2;
+				MARKETING_VERSION = 1.4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dodoshot.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

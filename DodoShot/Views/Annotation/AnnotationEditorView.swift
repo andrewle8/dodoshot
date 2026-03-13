@@ -31,6 +31,15 @@ class AnnotationEditorWindowController {
 
     private init() {}
 
+    /// Convenience: open editor and auto-save on close
+    func showEditorAndSave(for screenshot: Screenshot) {
+        showEditor(for: screenshot) { updatedScreenshot in
+            Task { @MainActor in
+                ScreenCaptureService.shared.saveToFile(updatedScreenshot)
+            }
+        }
+    }
+
     func showEditor(for screenshot: Screenshot, onSave: @escaping (Screenshot) -> Void) {
         // Copy all data we need as local variables - no references to screenshot after this
         let screenshotId = screenshot.id
@@ -1367,21 +1376,7 @@ struct AnnotationEditorView: View {
         pasteboard.clearContents()
         pasteboard.writeObjects([finalImage])
 
-        // Build a screenshot for the quick overlay before closing
-        let overlayScreenshot: Screenshot? = {
-            guard let tiff = finalImage.tiffRepresentation,
-                  let bmp = NSBitmapImageRep(data: tiff),
-                  let png = bmp.representation(using: .png, properties: [:]) else { return nil }
-            return Screenshot(
-                id: screenshotId,
-                pngData: png,
-                imageSize: finalImage.size,
-                capturedAt: screenshotCapturedAt,
-                captureType: screenshotCaptureType
-            )
-        }()
-
-        // Show HUD feedback then close and show quick overlay
+        // Show HUD feedback then close
         withAnimation(.spring(response: 0.3)) {
             hudMessage = "Copied to clipboard"
             showCopiedHUD = true
@@ -1389,9 +1384,6 @@ struct AnnotationEditorView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             onCancel()
-            if let shot = overlayScreenshot {
-                QuickOverlayManager.shared.showOverlay(for: shot)
-            }
         }
     }
 
