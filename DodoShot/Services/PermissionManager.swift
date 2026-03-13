@@ -108,13 +108,28 @@ final class PermissionManager: ObservableObject {
 
     /// Request screen recording permission
     func requestScreenRecordingPermission() {
-        // Open System Settings to Screen Recording (macOS Ventura and later)
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-            NSWorkspace.shared.open(url)
+        // Open System Settings to Screen Recording via AppleScript
+        let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.settings.PrivacySecurity.extension"
+            end tell
+            """
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
+            if error != nil {
+                let fallback = """
+                    tell application "System Settings"
+                        activate
+                        reveal anchor "Privacy_ScreenCapture" of pane id "com.apple.settings.PrivacySecurity"
+                    end tell
+                    """
+                NSAppleScript(source: fallback)?.executeAndReturnError(nil)
+            }
         }
 
-        // Fallback: try to trigger the system prompt by attempting a capture
-        // This will show the permission dialog if not already granted
+        // Also trigger the system prompt
         CGRequestScreenCaptureAccess()
     }
 
@@ -131,10 +146,7 @@ final class PermissionManager: ObservableObject {
 
     /// Open Screen Recording settings
     func openScreenRecordingSettings() {
-        // Open System Settings directly to Screen Recording (macOS Sonoma)
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-            NSWorkspace.shared.open(url)
-        }
+        requestScreenRecordingPermission()
     }
 
     /// Trigger the screen recording system prompt
@@ -142,10 +154,29 @@ final class PermissionManager: ObservableObject {
         CGRequestScreenCaptureAccess()
     }
 
-    /// Open Accessibility settings
+    /// Open Accessibility settings in Privacy & Security
     func openAccessibilitySettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
+        // URL schemes for Privacy panes are unreliable across macOS versions.
+        // Use AppleScript which works on Sonoma, Sequoia, and Tahoe.
+        let script = """
+            tell application "System Settings"
+                activate
+                reveal anchor "Privacy_Accessibility" of pane id "com.apple.settings.PrivacySecurity.extension"
+            end tell
+            """
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
+            if error != nil {
+                // Fallback: try without .extension suffix (older macOS)
+                let fallback = """
+                    tell application "System Settings"
+                        activate
+                        reveal anchor "Privacy_Accessibility" of pane id "com.apple.settings.PrivacySecurity"
+                    end tell
+                    """
+                NSAppleScript(source: fallback)?.executeAndReturnError(nil)
+            }
         }
     }
 
