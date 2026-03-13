@@ -48,10 +48,18 @@ struct PermissionOnboardingView: View {
     }
 
     private func updateStep() {
+        let previousStep = currentStep
         if !permissionManager.isScreenRecordingGranted {
             currentStep = .screenRecording
         } else if !permissionManager.isAccessibilityGranted {
             currentStep = .accessibility
+            // If we just advanced from screen recording, navigate System Settings
+            // to Accessibility (it's still showing Screen Recording from step 1)
+            if previousStep == .screenRecording {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    permissionManager.openAccessibilitySettings()
+                }
+            }
         } else {
             currentStep = .complete
             // Auto-close after a brief delay when complete
