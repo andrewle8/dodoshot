@@ -473,10 +473,8 @@ struct CompactOverlayView: View {
         withAnimation(.spring(response: 0.3)) {
             showCopiedBadge = true
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            withAnimation(.spring(response: 0.3)) {
-                showCopiedBadge = false
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            onDismiss()
         }
     }
 
@@ -643,10 +641,8 @@ struct ExpandedOverlayView: View {
         withAnimation(.spring(response: 0.3)) {
             showCopiedBadge = true
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            withAnimation(.spring(response: 0.3)) {
-                showCopiedBadge = false
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            onDismiss()
         }
     }
 
