@@ -104,7 +104,9 @@ struct PermissionOnboardingView: View {
                     .frame(width: 8, height: 8)
             }
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.top, 40)
+        .padding(.bottom, 20)
     }
 
     private var stepNumber: Int {
