@@ -19,7 +19,12 @@ final class PermissionManager: ObservableObject {
     /// Flag to prevent repeated screen recording checks while system dialog is open
     private var isCheckingScreenRecording: Bool = false
 
+    /// Runtime-only bypass for accessibility (not persisted across launches)
+    private var accessibilityBypassed: Bool = false
+
     private init() {
+        // Clean up stale bypass flag from older versions
+        UserDefaults.standard.removeObject(forKey: "accessibilityBypassed")
         checkPermissions()
         // Don't auto-start monitoring - let the UI start it when needed
     }
@@ -67,10 +72,8 @@ final class PermissionManager: ObservableObject {
 
         // Ad-hoc signed apps can't be reliably detected by AXIsProcessTrusted
         // even when the user has enabled them in System Settings. Allow bypass.
-        if !finalResult {
-            if UserDefaults.standard.bool(forKey: "accessibilityBypassed") {
-                finalResult = true
-            }
+        if !finalResult && accessibilityBypassed {
+            finalResult = true
         }
 
         DispatchQueue.main.async { [weak self] in
@@ -83,7 +86,7 @@ final class PermissionManager: ObservableObject {
 
     /// Bypass accessibility check (ad-hoc signed apps can't be reliably detected)
     func bypassAccessibility() {
-        UserDefaults.standard.set(true, forKey: "accessibilityBypassed")
+        accessibilityBypassed = true
         isAccessibilityGranted = true
     }
 
@@ -101,8 +104,7 @@ final class PermissionManager: ObservableObject {
 
     /// Reset bypass flag and re-prompt for accessibility
     func resetAndRequestAccessibility() {
-        // Clear the bypass flag so we re-check properly
-        UserDefaults.standard.removeObject(forKey: "accessibilityBypassed")
+        accessibilityBypassed = false
 
         // Note: tccutil reset requires admin privileges on macOS Sonoma+ and
         // silently fails without them, so we skip it and just re-prompt.
