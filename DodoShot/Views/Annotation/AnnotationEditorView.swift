@@ -1760,7 +1760,12 @@ struct AnnotationEditorView: View {
                     .foregroundColor: annotation.color
                 ]
                 let string = NSAttributedString(string: text, attributes: attributes)
-                string.draw(at: start)
+                // Un-flip context so text renders right-side up
+                context.saveGState()
+                context.translateBy(x: start.x, y: start.y)
+                context.scaleBy(x: 1, y: -1)
+                string.draw(at: .zero)
+                context.restoreGState()
             }
 
         case .blur:
@@ -1831,18 +1836,24 @@ struct AnnotationEditorView: View {
             context.setFillColor(annotation.color.cgColor)
             context.fillEllipse(in: circleRect)
 
-            // Draw text
+            // Draw text — un-flip context so text renders right-side up
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
                 .foregroundColor: NSColor.white
             ]
             let string = NSAttributedString(string: displayText, attributes: attributes)
             let textSize = string.size()
+
+            context.saveGState()
+            // Un-flip at the text center point
+            context.translateBy(x: start.x, y: start.y)
+            context.scaleBy(x: 1, y: -1)
             let textPoint = CGPoint(
-                x: start.x - textSize.width / 2,
-                y: start.y - textSize.height / 2
+                x: -textSize.width / 2,
+                y: -textSize.height / 2
             )
             string.draw(at: textPoint)
+            context.restoreGState()
 
         case .select:
             break
