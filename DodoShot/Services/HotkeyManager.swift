@@ -263,6 +263,15 @@ class HotkeyManager {
         return hasCmd == needCmd && hasShift == needShift && hasCtrl == needCtrl && hasAlt == needAlt
     }
 
+    /// Re-enable the event tap if macOS silently disabled it
+    func ensureTapEnabled() {
+        guard let tap = eventTap else { return }
+        if !CGEvent.tapIsEnabled(tap: tap) {
+            NSLog("[HotkeyManager] Event tap was disabled by system — re-enabling")
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
+    }
+
     func unregisterHotkeys() {
         if let eventTap = eventTap {
             CGEvent.tapEnable(tap: eventTap, enable: false)

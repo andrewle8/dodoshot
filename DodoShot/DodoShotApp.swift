@@ -60,6 +60,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Screen recording permission is NOT polled — it triggers the
         // system "would like to record" dialog on macOS 26.
         permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            // Re-enable event tap if macOS disabled it (common on macOS 26 with ad-hoc signing)
+            HotkeyManager.shared.ensureTapEnabled()
+
             // Register hotkeys once accessibility is granted
             if AXIsProcessTrusted() {
                 self?.hotkeyManager.registerHotkeys()
