@@ -1165,6 +1165,15 @@ class ScreenCaptureService: ObservableObject {
 
     /// Re-activate the previous app and simulate Cmd+V to paste the clipboard
     private func pasteToFrontApp() {
+        let settings = SettingsManager.shared.settings
+
+        // If "Always paste to iTerm2" is enabled, use AppleScript injection
+        // Works from ANY app — no focus switch needed, no Cmd+V
+        if settings.alwaysPasteToiTerm {
+            pasteToiTermViaScript()
+            return
+        }
+
         guard let targetApp = previousApp else {
             NSLog("[Lucida] pasteToFrontApp: no previousApp saved")
             return
@@ -1172,12 +1181,17 @@ class ScreenCaptureService: ObservableObject {
 
         NSLog("[Lucida] pasteToFrontApp: activating %@ (pid %d)", targetApp.localizedName ?? "unknown", targetApp.processIdentifier)
 
+        // Check if target is a terminal — use AppleScript for iTerm2, Cmd+V for others
+        if targetApp.bundleIdentifier == "com.googlecode.iterm2" {
+            pasteToiTermViaScript()
+            return
+        }
+
         // Force activate the target app
         targetApp.activate(options: .activateIgnoringOtherApps)
 
-        // Longer delay for terminal apps (iTerm2, Terminal.app) to regain focus
+        // Delay for app to regain focus
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            // Use combinedSessionState for better compatibility with terminal emulators
             let source = CGEventSource(stateID: .combinedSessionState)
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true) // 9 = V
@@ -1189,6 +1203,53 @@ class ScreenCaptureService: ObservableObject {
             keyUp?.post(tap: .cghidEventTap)
 
             NSLog("[Lucida] pasteToFrontApp: Cmd+V posted to %@", targetApp.localizedName ?? "unknown")
+        }
+    }
+
+    /// Paste clipboard text directly into iTerm2 via AppleScript.
+    /// Works from ANY app — no focus switch, no Cmd+V, no timing issues.
+    private func pasteToiTermViaScript() {
+        guard let text = NSPasteboard.general.string(forType: .string) else {
+            NSLog("[Lucida] pasteToiTermViaScript: no text on clipboard")
+            return
+        }
+
+        // Escape text for AppleScript string (backslashes and quotes)
+        let escaped = text
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+
+        let script = """
+        tell application "iTerm2"
+            tell current session of current window
+                write text "\(escaped)" without newline
+            end tell
+        end tell
+        """
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            var error: NSDictionary?
+            if let appleScript = NSAppleScript(source: script) {
+                appleScript.executeAndReturnError(&error)
+                if let error = error {
+                    NSLog("[Lucida] pasteToiTermViaScript error: %@", error)
+                    // Fallback to Cmd+V
+                    DispatchQueue.main.async { [weak self] in
+                        self?.previousApp?.activate(options: .activateIgnoringOtherApps)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            let source = CGEventSource(stateID: .combinedSessionState)
+                            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true)
+                            keyDown?.flags = .maskCommand
+                            keyDown?.post(tap: .cghidEventTap)
+                            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
+                            keyUp?.flags = .maskCommand
+                            keyUp?.post(tap: .cghidEventTap)
+                        }
+                    }
+                } else {
+                    NSLog("[Lucida] pasteToiTermViaScript: text injected into iTerm2")
+                }
+            }
         }
     }
 

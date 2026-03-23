@@ -403,7 +403,7 @@ struct AppSettings: Codable {
     // Custom CodingKeys - exclude llmApiKey as it's computed
     enum CodingKeys: String, CodingKey {
         case anthropicApiKey, openaiApiKey, llmProvider, saveLocation, autoCopyToClipboard
-        case hideDesktopIcons
+        case hideDesktopIcons, alwaysPasteToiTerm
         case hotkeys, appearanceMode, launchAtStartup, imageFormat, jpgQuality, webpQuality
         case defaultAnnotationColor, defaultStrokeWidth, defaultAnnotationTool
         case textAnnotationSettings, filenameTemplate, sequentialNumber
@@ -446,6 +446,7 @@ struct AppSettings: Codable {
         saveLocation = try container.decode(String.self, forKey: .saveLocation)
         autoCopyToClipboard = try container.decode(Bool.self, forKey: .autoCopyToClipboard)
         hideDesktopIcons = try container.decode(Bool.self, forKey: .hideDesktopIcons)
+        alwaysPasteToiTerm = try container.decodeIfPresent(Bool.self, forKey: .alwaysPasteToiTerm) ?? false
         hotkeys = try container.decode(HotkeySettings.self, forKey: .hotkeys)
         appearanceMode = try container.decode(AppearanceMode.self, forKey: .appearanceMode)
         launchAtStartup = try container.decode(Bool.self, forKey: .launchAtStartup)
@@ -485,6 +486,7 @@ struct AppSettings: Codable {
         try container.encode(saveLocation, forKey: .saveLocation)
         try container.encode(autoCopyToClipboard, forKey: .autoCopyToClipboard)
         try container.encode(hideDesktopIcons, forKey: .hideDesktopIcons)
+        try container.encode(alwaysPasteToiTerm, forKey: .alwaysPasteToiTerm)
         try container.encode(hotkeys, forKey: .hotkeys)
         try container.encode(appearanceMode, forKey: .appearanceMode)
         try container.encode(launchAtStartup, forKey: .launchAtStartup)
@@ -516,6 +518,7 @@ struct AppSettings: Codable {
     }
     var autoCopyToClipboard: Bool
     var hideDesktopIcons: Bool
+    var alwaysPasteToiTerm: Bool
     var hotkeys: HotkeySettings
     var appearanceMode: AppearanceMode
     var launchAtStartup: Bool
@@ -553,6 +556,7 @@ struct AppSettings: Codable {
         saveLocation: String,
         autoCopyToClipboard: Bool,
         hideDesktopIcons: Bool,
+        alwaysPasteToiTerm: Bool = false,
         hotkeys: HotkeySettings,
         appearanceMode: AppearanceMode,
         launchAtStartup: Bool,
@@ -588,6 +592,7 @@ struct AppSettings: Codable {
         self.saveLocation = saveLocation
         self.autoCopyToClipboard = autoCopyToClipboard
         self.hideDesktopIcons = hideDesktopIcons
+        self.alwaysPasteToiTerm = alwaysPasteToiTerm
         self.hotkeys = hotkeys
         self.appearanceMode = appearanceMode
         self.launchAtStartup = launchAtStartup
@@ -629,6 +634,7 @@ struct AppSettings: Codable {
             saveLocation: screenshotsPath,
             autoCopyToClipboard: true,
             hideDesktopIcons: false,
+            alwaysPasteToiTerm: false,
             hotkeys: .default,
             appearanceMode: .dark,
             launchAtStartup: false,

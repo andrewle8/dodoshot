@@ -198,6 +198,13 @@ struct MenuBarView: View {
                 }
                 .toggleStyle(DarkroomToggleStyle())
 
+                Toggle(isOn: $settingsManager.settings.alwaysPasteToiTerm) {
+                    Text("iTerm2")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .toggleStyle(DarkroomToggleStyle())
+
                 Spacer()
             }
             .padding(.horizontal, 14)
