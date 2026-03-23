@@ -414,7 +414,7 @@ struct AppSettings: Codable {
         case freezeScreenBeforeCapture
         case captureWindowShadow
         case quickOverlayAutoDismiss, quickOverlayTimeout
-        case ocrOutputFormat
+        case ocrOutputFormat, ocrLLMCleanup, ocrCleanupModel
         // Legacy key for backward compatibility
         case llmApiKey
     }
@@ -472,6 +472,8 @@ struct AppSettings: Codable {
         quickOverlayAutoDismiss = try container.decodeIfPresent(Bool.self, forKey: .quickOverlayAutoDismiss) ?? true
         quickOverlayTimeout = try container.decodeIfPresent(Double.self, forKey: .quickOverlayTimeout) ?? 5.0
         ocrOutputFormat = try container.decodeIfPresent(OCROutputFormat.self, forKey: .ocrOutputFormat) ?? .auto
+        ocrLLMCleanup = try container.decodeIfPresent(Bool.self, forKey: .ocrLLMCleanup) ?? false
+        ocrCleanupModel = try container.decodeIfPresent(String.self, forKey: .ocrCleanupModel) ?? "gemma3:4b"
     }
 
     // Custom encoder - don't encode the computed llmApiKey
@@ -509,6 +511,8 @@ struct AppSettings: Codable {
         try container.encode(quickOverlayAutoDismiss, forKey: .quickOverlayAutoDismiss)
         try container.encode(quickOverlayTimeout, forKey: .quickOverlayTimeout)
         try container.encode(ocrOutputFormat, forKey: .ocrOutputFormat)
+        try container.encode(ocrLLMCleanup, forKey: .ocrLLMCleanup)
+        try container.encode(ocrCleanupModel, forKey: .ocrCleanupModel)
     }
     var autoCopyToClipboard: Bool
     var hideDesktopIcons: Bool
@@ -538,6 +542,8 @@ struct AppSettings: Codable {
     var quickOverlayAutoDismiss: Bool
     var quickOverlayTimeout: Double
     var ocrOutputFormat: OCROutputFormat
+    var ocrLLMCleanup: Bool
+    var ocrCleanupModel: String
 
     // Memberwise init (needed because we have custom Codable)
     init(
@@ -572,7 +578,9 @@ struct AppSettings: Codable {
         captureWindowShadow: Bool = true,
         quickOverlayAutoDismiss: Bool = true,
         quickOverlayTimeout: Double = 5.0,
-        ocrOutputFormat: OCROutputFormat = .auto
+        ocrOutputFormat: OCROutputFormat = .auto,
+        ocrLLMCleanup: Bool = false,
+        ocrCleanupModel: String = "gemma3:4b"
     ) {
         self.anthropicApiKey = anthropicApiKey
         self.openaiApiKey = openaiApiKey
@@ -606,6 +614,8 @@ struct AppSettings: Codable {
         self.quickOverlayAutoDismiss = quickOverlayAutoDismiss
         self.quickOverlayTimeout = quickOverlayTimeout
         self.ocrOutputFormat = ocrOutputFormat
+        self.ocrLLMCleanup = ocrLLMCleanup
+        self.ocrCleanupModel = ocrCleanupModel
     }
 
     static var `default`: AppSettings {
@@ -644,7 +654,9 @@ struct AppSettings: Codable {
             captureWindowShadow: true,
             quickOverlayAutoDismiss: true,
             quickOverlayTimeout: 5.0,
-            ocrOutputFormat: .auto
+            ocrOutputFormat: .auto,
+            ocrLLMCleanup: false,
+            ocrCleanupModel: "gemma3:4b"
         )
     }
 

@@ -215,6 +215,11 @@ struct GeneralSettingsTab: View {
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
+
+                        Divider()
+
+                        // LLM Cleanup
+                        OCRLLMCleanupSection(settingsManager: settingsManager)
                     }
                 }
 
@@ -1276,6 +1281,95 @@ struct AboutTab: View {
     private func openGitHub() {
         if let url = URL(string: "https://github.com/andrewle8/lucida") {
             NSWorkspace.shared.open(url)
+        }
+    }
+}
+
+// MARK: - OCR LLM Cleanup Section
+
+struct OCRLLMCleanupSection: View {
+    @ObservedObject var settingsManager: SettingsManager
+    @State private var ollamaAvailable = false
+    @State private var availableModels: [String] = []
+    @State private var isCheckingOllama = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Toggle row with status indicator
+            HStack {
+                Toggle(isOn: $settingsManager.settings.ocrLLMCleanup) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("LLM cleanup")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("Uses local Ollama model to fix OCR errors and improve formatting")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+                .controlSize(.small)
+
+                Spacer()
+
+                // Status indicator
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(ollamaAvailable ? Color.green : Color.red)
+                        .frame(width: 7, height: 7)
+                    Text(ollamaAvailable ? "Ollama running" : "Ollama offline")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Model picker (only when enabled)
+            if settingsManager.settings.ocrLLMCleanup {
+                HStack {
+                    Text("Model")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+
+                    if availableModels.isEmpty {
+                        TextField("Model name", text: $settingsManager.settings.ocrCleanupModel)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(size: 12))
+                            .frame(maxWidth: 200)
+                    } else {
+                        Picker("", selection: $settingsManager.settings.ocrCleanupModel) {
+                            ForEach(availableModels, id: \.self) { model in
+                                Text(model).tag(model)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: 200)
+                    }
+
+                    Button(action: checkOllama) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 11))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isCheckingOllama)
+                }
+            }
+        }
+        .onAppear {
+            checkOllama()
+        }
+    }
+
+    private func checkOllama() {
+        isCheckingOllama = true
+        Task {
+            let available = await OCRPostProcessor.shared.isOllamaAvailable()
+            let models = available ? await OCRPostProcessor.shared.availableModels() : []
+            DispatchQueue.main.async {
+                ollamaAvailable = available
+                availableModels = models
+                isCheckingOllama = false
+                // If current model isn't in the list and list is non-empty,
+                // keep the current setting (user might have typed a custom model name)
+            }
         }
     }
 }

@@ -420,11 +420,73 @@ class ScreenCaptureService: ObservableObject {
             ) { result in
                 switch result {
                 case .success(let ocrResult):
-                    OCRService.shared.copyToClipboard(ocrResult.formattedText)
-                    if shouldPaste {
-                        self.pasteToFrontApp()
+                    // If LLM cleanup is enabled, post-process the text
+                    let settings = SettingsManager.shared.settings
+                    if settings.ocrLLMCleanup {
+                        Task {
+                            let available = await OCRPostProcessor.shared.isOllamaAvailable()
+                            if available {
+                                // Run cleanup with 10s timeout
+                                let cleaned = await withTaskGroup(of: String?.self) { group -> String in
+                                    group.addTask {
+                                        await OCRPostProcessor.shared.cleanup(
+                                            text: ocrResult.formattedText,
+                                            detectedType: ocrResult.detectedType
+                                        )
+                                    }
+                                    group.addTask {
+                                        try? await Task.sleep(nanoseconds: 10_000_000_000)
+                                        return nil  // timeout sentinel
+                                    }
+                                    // Take whichever finishes first
+                                    var result: String = ocrResult.formattedText
+                                    for await value in group {
+                                        if let v = value {
+                                            result = v
+                                            group.cancelAll()
+                                            break
+                                        } else {
+                                            // Timeout hit, cancel cleanup and use original
+                                            group.cancelAll()
+                                            break
+                                        }
+                                    }
+                                    return result
+                                }
+                                let cleanedResult = OCRResult(
+                                    rawText: ocrResult.rawText,
+                                    formattedText: cleaned,
+                                    detectedType: ocrResult.detectedType,
+                                    detectedLanguage: ocrResult.detectedLanguage,
+                                    lineCount: ocrResult.lineCount
+                                )
+                                DispatchQueue.main.async {
+                                    OCRService.shared.copyToClipboard(cleanedResult.formattedText)
+                                    if shouldPaste {
+                                        self.pasteToFrontApp()
+                                    } else {
+                                        self.showOCRResult(ocrResult: cleanedResult)
+                                    }
+                                }
+                            } else {
+                                // Ollama not running, use original
+                                DispatchQueue.main.async {
+                                    OCRService.shared.copyToClipboard(ocrResult.formattedText)
+                                    if shouldPaste {
+                                        self.pasteToFrontApp()
+                                    } else {
+                                        self.showOCRResult(ocrResult: ocrResult)
+                                    }
+                                }
+                            }
+                        }
                     } else {
-                        self.showOCRResult(ocrResult: ocrResult)
+                        OCRService.shared.copyToClipboard(ocrResult.formattedText)
+                        if shouldPaste {
+                            self.pasteToFrontApp()
+                        } else {
+                            self.showOCRResult(ocrResult: ocrResult)
+                        }
                     }
                 case .failure(let error):
                     self.showOCRError(error: error)
