@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var popover: NSPopover!
     private var captureService: ScreenCaptureService!
     private var hotkeyManager: HotkeyManager!
+    private var settingsWindow: NSWindow?
     private var permissionCheckTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -252,9 +253,34 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             popover.performClose(nil)
         }
 
-        // Open the native SwiftUI Settings scene (macOS 13+)
+        // Create or show settings window
+        if settingsWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 520, height: 420),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "DodoShot Settings"
+            window.center()
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            window.contentViewController = NSHostingController(rootView: SettingsView())
+            settingsWindow = window
+        }
+
+        // Temporarily switch to .regular so SwiftUI renders under .accessory policy (macOS 26)
+        NSApp.setActivationPolicy(.regular)
+        settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow, window === settingsWindow else { return }
+        // Restore .accessory policy if user preference is no-dock
+        if !SettingsManager.shared.settings.showInDock {
+            NSApp.setActivationPolicy(.accessory)
+        }
     }
 
     @objc private func quitApp() {
