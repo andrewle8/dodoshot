@@ -1165,21 +1165,30 @@ class ScreenCaptureService: ObservableObject {
 
     /// Re-activate the previous app and simulate Cmd+V to paste the clipboard
     private func pasteToFrontApp() {
-        guard let targetApp = previousApp else { return }
+        guard let targetApp = previousApp else {
+            NSLog("[Lucida] pasteToFrontApp: no previousApp saved")
+            return
+        }
 
-        targetApp.activate(options: [])
+        NSLog("[Lucida] pasteToFrontApp: activating %@ (pid %d)", targetApp.localizedName ?? "unknown", targetApp.processIdentifier)
 
-        // Small delay for app activation to complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            let source = CGEventSource(stateID: .hidSystemState)
+        // Force activate the target app
+        targetApp.activate(options: .activateIgnoringOtherApps)
+
+        // Longer delay for terminal apps (iTerm2, Terminal.app) to regain focus
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            // Use combinedSessionState for better compatibility with terminal emulators
+            let source = CGEventSource(stateID: .combinedSessionState)
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: true) // 9 = V
             keyDown?.flags = .maskCommand
-            keyDown?.post(tap: .cgAnnotatedSessionEventTap)
+            keyDown?.post(tap: .cghidEventTap)
 
             let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 9, keyDown: false)
             keyUp?.flags = .maskCommand
-            keyUp?.post(tap: .cgAnnotatedSessionEventTap)
+            keyUp?.post(tap: .cghidEventTap)
+
+            NSLog("[Lucida] pasteToFrontApp: Cmd+V posted to %@", targetApp.localizedName ?? "unknown")
         }
     }
 
