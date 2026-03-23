@@ -39,14 +39,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Setup menu bar
         setupMenuBar()
 
-        // Show permission onboarding if needed, then register hotkeys
-        PermissionOnboardingWindowController.shared.showIfNeeded { [weak self] in
-            self?.checkPermissionsAndRegisterHotkeys()
-            self?.startPermissionMonitoring()
-
-            // Show welcome HUD with shortcuts after permissions are set up
-            WelcomeHUDWindowController.shared.showIfNeeded()
-        }
+        // Skip permission onboarding — just register hotkeys directly
+        checkPermissionsAndRegisterHotkeys()
+        startPermissionMonitoring()
     }
 
     private func checkPermissionsAndRegisterHotkeys() {
