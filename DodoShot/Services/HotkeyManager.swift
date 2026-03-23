@@ -11,6 +11,9 @@ class HotkeyManager {
     /// Registered hotkey bindings: keyCode -> [(modifiers, action)]
     private var hotkeyBindings: [UInt16: [(CGEventFlags, () -> Void)]] = [:]
 
+    /// Set of conflicting hotkey display strings (populated after rebuildBindings)
+    private(set) var conflictingHotkeys: Set<String> = []
+
     private init() {}
 
     func registerHotkeys() {
@@ -62,67 +65,117 @@ class HotkeyManager {
     /// Build the lookup dictionary from current settings
     private func rebuildBindings() {
         hotkeyBindings.removeAll()
+        conflictingHotkeys.removeAll()
 
         let settings = SettingsManager.shared.settings.hotkeys
 
+        // Collect all hotkey definitions: (displayString, parsed, action)
+        struct HotkeyDef {
+            let displayString: String
+            let keyCode: UInt16
+            let modifiers: CGEventFlags
+            let action: () -> Void
+        }
+
+        var allDefs: [HotkeyDef] = []
+
         // Area capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.areaCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.startCapture(type: .area)
-                }
-            }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+            allDefs.append(HotkeyDef(displayString: settings.areaCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCapture(type: .area) }
+            }))
         }
 
         // Window capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.windowCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.startCapture(type: .window)
-                }
-            }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+            allDefs.append(HotkeyDef(displayString: settings.windowCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCapture(type: .window) }
+            }))
         }
 
         // Fullscreen capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.fullscreenCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.startCapture(type: .fullscreen)
-                }
-            }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+            allDefs.append(HotkeyDef(displayString: settings.fullscreenCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCapture(type: .fullscreen) }
+            }))
         }
 
-        // Auto-paste capture (capture area -> clipboard -> Cmd+V into previous app)
+        // Auto-paste capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.autoPasteCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.startCaptureAndPaste(type: .area)
-                }
-            }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+            allDefs.append(HotkeyDef(displayString: settings.autoPasteCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCaptureAndPaste(type: .area) }
+            }))
         }
 
         // OCR paste capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.ocrPasteCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.startOCRCaptureAndPaste()
-                }
-            }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+            allDefs.append(HotkeyDef(displayString: settings.ocrPasteCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startOCRCaptureAndPaste() }
+            }))
         }
 
         // All screens capture
         if let parsed = HotkeyManager.parseHotkeyString(settings.allScreensCapture) {
-            let action: () -> Void = {
-                DispatchQueue.main.async {
-                    ScreenCaptureService.shared.captureAllScreens()
-                }
+            allDefs.append(HotkeyDef(displayString: settings.allScreensCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.captureAllScreens() }
+            }))
+        }
+
+        // Scrolling capture
+        if let parsed = HotkeyManager.parseHotkeyString(settings.scrollingCapture) {
+            allDefs.append(HotkeyDef(displayString: settings.scrollingCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startScrollingCapture() }
+            }))
+        }
+
+        // OCR capture
+        if let parsed = HotkeyManager.parseHotkeyString(settings.ocrCapture) {
+            allDefs.append(HotkeyDef(displayString: settings.ocrCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startOCRCapture() }
+            }))
+        }
+
+        // Color picker
+        if let parsed = HotkeyManager.parseHotkeyString(settings.colorPicker) {
+            allDefs.append(HotkeyDef(displayString: settings.colorPicker, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { MeasurementService.shared.startColorPicker() }
+            }))
+        }
+
+        // Pixel ruler
+        if let parsed = HotkeyManager.parseHotkeyString(settings.pixelRuler) {
+            allDefs.append(HotkeyDef(displayString: settings.pixelRuler, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { MeasurementService.shared.startPixelRuler() }
+            }))
+        }
+
+        // Timed capture
+        if let parsed = HotkeyManager.parseHotkeyString(settings.timedCapture) {
+            allDefs.append(HotkeyDef(displayString: settings.timedCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.showTimedCaptureModal() }
+            }))
+        }
+
+        // Active window capture (captures frontmost window without picker)
+        if let parsed = HotkeyManager.parseHotkeyString(settings.activeWindowCapture) {
+            allDefs.append(HotkeyDef(displayString: settings.activeWindowCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.captureActiveWindow() }
+            }))
+        }
+
+        // Detect conflicts: group by (keyCode, modifiers) and only register the first binding per group
+        var seen: [String: String] = [:]  // "keyCode:modifiers" -> first display string
+        for def in allDefs {
+            let key = "\(def.keyCode):\(def.modifiers.rawValue)"
+            if let existing = seen[key] {
+                // Conflict found
+                conflictingHotkeys.insert(existing)
+                conflictingHotkeys.insert(def.displayString)
+                print("[HotkeyManager] Conflict: \"\(def.displayString)\" conflicts with \"\(existing)\" — skipping \"\(def.displayString)\"")
+            } else {
+                seen[key] = def.displayString
+                hotkeyBindings[def.keyCode, default: []].append((def.modifiers, def.action))
             }
-            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
         }
     }
 

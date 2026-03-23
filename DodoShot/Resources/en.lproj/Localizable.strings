@@ -95,6 +95,12 @@
 "settings.autoPasteCapture" = "Auto-paste capture";
 "settings.ocrPasteCapture" = "OCR paste capture";
 "settings.allScreensCapture" = "All screens capture";
+"settings.scrollingCapture" = "Scrolling capture";
+"settings.ocrCapture" = "OCR capture";
+"settings.colorPickerHotkey" = "Color picker";
+"settings.pixelRuler" = "Pixel ruler";
+"settings.timedCapture" = "Timed capture";
+"settings.activeWindowCapture" = "Active window capture";
 "settings.recording" = "Recording...";
 "settings.permissions" = "Accessibility permission required";
 "settings.permissions.description" = "Shutter needs accessibility access for global hotkeys to work.";

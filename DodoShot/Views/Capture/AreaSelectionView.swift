@@ -1,6 +1,9 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Accent color constant
+private let shutterGreen = Color(red: 0x2E / 255.0, green: 0xD0 / 255.0, blue: 0x65 / 255.0)
+
 struct AreaSelectionView: View {
     let onComplete: (CGRect) -> Void
     let onCancel: () -> Void
@@ -9,6 +12,10 @@ struct AreaSelectionView: View {
     @State private var currentPoint: CGPoint?
     @State private var isDragging = false
     @State private var mouseLocation: CGPoint = .zero
+    @State private var shiftHeld = false
+    @State private var spaceHeld = false
+    /// Anchor recorded when Space is first pressed during a drag (used for repositioning)
+    @State private var spaceDragAnchor: CGPoint?
 
     var body: some View {
         GeometryReader { geometry in
@@ -22,13 +29,14 @@ struct AreaSelectionView: View {
                         startPoint = location
                         currentPoint = location
                         isDragging = true
+                        spaceDragAnchor = nil
                     },
                     onMouseDragged: { location in
-                        currentPoint = location
+                        handleDrag(to: location)
                     },
                     onMouseUp: { location in
-                        if let start = startPoint {
-                            let rect = selectionRect(from: start, to: location)
+                        if let start = startPoint, let current = currentPoint {
+                            let rect = buildSelectionRect(from: start, to: current)
                             if rect.width > 10 && rect.height > 10 {
                                 onComplete(rect)
                             } else {
@@ -37,9 +45,28 @@ struct AreaSelectionView: View {
                             }
                         }
                         isDragging = false
+                        spaceDragAnchor = nil
                     },
                     onEscape: {
                         onCancel()
+                    },
+                    onFlagsChanged: { flags in
+                        shiftHeld = flags.contains(.shift)
+                        spaceHeld = flags.contains(NSEvent.ModifierFlags(rawValue: UInt(CGEventFlags.maskSecondaryFn.rawValue))) || isSpacePressed(flags)
+                    },
+                    onArrowKey: { direction, shift in
+                        nudgeSelection(direction: direction, shift: shift)
+                    },
+                    onSpaceDown: {
+                        spaceHeld = true
+                        // Record anchor for repositioning when Space first pressed during drag
+                        if isDragging, spaceDragAnchor == nil, let current = currentPoint {
+                            spaceDragAnchor = current
+                        }
+                    },
+                    onSpaceUp: {
+                        spaceHeld = false
+                        spaceDragAnchor = nil
                     }
                 )
 
@@ -49,7 +76,7 @@ struct AreaSelectionView: View {
 
                 // Selection rectangle
                 if let start = startPoint, let current = currentPoint {
-                    let rect = selectionRect(from: start, to: current)
+                    let rect = buildSelectionRect(from: start, to: current)
 
                     // Clear hole in overlay
                     Rectangle()
@@ -64,7 +91,7 @@ struct AreaSelectionView: View {
                         .allowsHitTesting(false)
 
                     // Dimension label
-                    DimensionLabel(rect: rect)
+                    DimensionLabel(rect: rect, shiftHeld: shiftHeld)
                         .allowsHitTesting(false)
                 }
 
@@ -90,13 +117,79 @@ struct AreaSelectionView: View {
         .ignoresSafeArea()
     }
 
-    private func selectionRect(from start: CGPoint, to end: CGPoint) -> CGRect {
-        let x = min(start.x, end.x)
-        let y = min(start.y, end.y)
-        let width = abs(end.x - start.x)
-        let height = abs(end.y - start.y)
+    // MARK: - Drag handling
+
+    private func handleDrag(to location: CGPoint) {
+        guard var start = startPoint else { return }
+
+        if spaceHeld || spaceDragAnchor != nil {
+            // Space held: reposition the entire selection without resizing
+            if let anchor = spaceDragAnchor {
+                let dx = location.x - anchor.x
+                let dy = location.y - anchor.y
+                startPoint = CGPoint(x: start.x + dx, y: start.y + dy)
+                currentPoint = CGPoint(x: (currentPoint?.x ?? location.x) + dx, y: (currentPoint?.y ?? location.y) + dy)
+                spaceDragAnchor = location
+            } else {
+                spaceDragAnchor = location
+            }
+            return
+        }
+
+        // Normal drag (with optional shift-square constraint)
+        currentPoint = location
+    }
+
+    // MARK: - Selection rect construction
+
+    private func buildSelectionRect(from start: CGPoint, to end: CGPoint) -> CGRect {
+        var dx = end.x - start.x
+        var dy = end.y - start.y
+
+        if shiftHeld && isDragging && spaceDragAnchor == nil {
+            // Constrain to square: use the larger dimension
+            let side = max(abs(dx), abs(dy))
+            dx = dx >= 0 ? side : -side
+            dy = dy >= 0 ? side : -side
+        }
+
+        let x = min(start.x, start.x + dx)
+        let y = min(start.y, start.y + dy)
+        let width = abs(dx)
+        let height = abs(dy)
         return CGRect(x: x, y: y, width: width, height: height)
     }
+
+    // MARK: - Arrow key nudge
+
+    private func nudgeSelection(direction: ArrowDirection, shift: Bool) {
+        guard let start = startPoint, let current = currentPoint else { return }
+        let amount: CGFloat = shift ? 10 : 1
+
+        var dx: CGFloat = 0
+        var dy: CGFloat = 0
+        switch direction {
+        case .left:  dx = -amount
+        case .right: dx = amount
+        case .up:    dy = -amount
+        case .down:  dy = amount
+        }
+
+        startPoint = CGPoint(x: start.x + dx, y: start.y + dy)
+        currentPoint = CGPoint(x: current.x + dx, y: current.y + dy)
+    }
+
+    // MARK: - Helpers
+
+    /// macOS does not surface Space via modifier flags; we track it via keyDown/keyUp instead.
+    private func isSpacePressed(_ flags: NSEvent.ModifierFlags) -> Bool {
+        return false // Space is handled via dedicated callbacks
+    }
+}
+
+// MARK: - Arrow Direction
+enum ArrowDirection {
+    case left, right, up, down
 }
 
 // MARK: - Selection Border
@@ -142,11 +235,23 @@ struct SelectionBorder: View {
 // MARK: - Dimension Label
 struct DimensionLabel: View {
     let rect: CGRect
+    var shiftHeld: Bool = false
+
+    private var dimensionText: String {
+        let w = Int(rect.width)
+        let h = Int(rect.height)
+        var text = "\(w) x \(h) px"
+        if shiftHeld && w > 0 && h > 0 {
+            let g = gcd(w, h)
+            text += "  (\(w / g):\(h / g))"
+        }
+        return text
+    }
 
     var body: some View {
-        Text("\(Int(rect.width)) × \(Int(rect.height))")
+        Text(dimensionText)
             .font(.system(size: 12, weight: .medium, design: .monospaced))
-            .foregroundColor(.white)
+            .foregroundColor(shutterGreen)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
@@ -154,6 +259,10 @@ struct DimensionLabel: View {
                     .fill(Color.black.opacity(0.7))
             )
             .position(x: rect.midX, y: rect.maxY + 25)
+    }
+
+    private func gcd(_ a: Int, _ b: Int) -> Int {
+        b == 0 ? a : gcd(b, a % b)
     }
 }
 
@@ -191,7 +300,35 @@ struct CrosshairView: View {
                     .frame(width: 12, height: 1)
             }
             .position(position)
+
+            // Coordinate label near crosshair
+            CoordinateLabel(position: position, screenSize: size)
         }
+    }
+}
+
+// MARK: - Coordinate Label
+struct CoordinateLabel: View {
+    let position: CGPoint
+    let screenSize: CGSize
+
+    var body: some View {
+        let text = "X: \(Int(position.x))  Y: \(Int(position.y))"
+
+        // Position the label offset from crosshair; flip side when near edges
+        let offsetX: CGFloat = position.x > screenSize.width - 140 ? -80 : 20
+        let offsetY: CGFloat = position.y > screenSize.height - 40 ? -24 : 20
+
+        Text(text)
+            .font(.system(size: 11, weight: .medium, design: .monospaced))
+            .foregroundColor(shutterGreen)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color.black.opacity(0.75))
+            )
+            .position(x: position.x + offsetX, y: position.y + offsetY)
     }
 }
 
@@ -223,6 +360,10 @@ struct MouseTrackingView: NSViewRepresentable {
     let onMouseDragged: (CGPoint) -> Void
     let onMouseUp: (CGPoint) -> Void
     let onEscape: () -> Void
+    var onFlagsChanged: ((NSEvent.ModifierFlags) -> Void)? = nil
+    var onArrowKey: ((ArrowDirection, Bool) -> Void)? = nil
+    var onSpaceDown: (() -> Void)? = nil
+    var onSpaceUp: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> MouseTrackingNSView {
         let view = MouseTrackingNSView()
@@ -231,6 +372,10 @@ struct MouseTrackingView: NSViewRepresentable {
         view.onMouseDragged = onMouseDragged
         view.onMouseUp = onMouseUp
         view.onEscape = onEscape
+        view.onFlagsChanged = onFlagsChanged
+        view.onArrowKey = onArrowKey
+        view.onSpaceDown = onSpaceDown
+        view.onSpaceUp = onSpaceUp
         return view
     }
 
@@ -243,8 +388,13 @@ class MouseTrackingNSView: NSView {
     var onMouseDragged: ((CGPoint) -> Void)?
     var onMouseUp: ((CGPoint) -> Void)?
     var onEscape: (() -> Void)?
+    var onFlagsChanged: ((NSEvent.ModifierFlags) -> Void)?
+    var onArrowKey: ((ArrowDirection, Bool) -> Void)?
+    var onSpaceDown: (() -> Void)?
+    var onSpaceUp: (() -> Void)?
 
     private var trackingArea: NSTrackingArea?
+    private var spaceIsDown = false
 
     override var acceptsFirstResponder: Bool { true }
 
@@ -314,13 +464,47 @@ class MouseTrackingNSView: NSView {
         onMouseUp?(CGPoint(x: location.x, y: flippedY))
     }
 
+    override func flagsChanged(with event: NSEvent) {
+        onFlagsChanged?(event.modifierFlags)
+        super.flagsChanged(with: event)
+    }
+
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 { // ESC key
             onEscape?()
             // Don't call super - consume the event to prevent app termination
-        } else {
-            super.keyDown(with: event)
+            return
         }
+
+        // Space key (keyCode 49) for repositioning
+        if event.keyCode == 49 {
+            if !spaceIsDown {
+                spaceIsDown = true
+                onSpaceDown?()
+            }
+            return
+        }
+
+        // Arrow keys for nudging selection
+        let shift = event.modifierFlags.contains(.shift)
+        switch event.keyCode {
+        case 123: onArrowKey?(.left, shift); return
+        case 124: onArrowKey?(.right, shift); return
+        case 125: onArrowKey?(.down, shift); return
+        case 126: onArrowKey?(.up, shift); return
+        default: break
+        }
+
+        super.keyDown(with: event)
+    }
+
+    override func keyUp(with event: NSEvent) {
+        if event.keyCode == 49 { // Space released
+            spaceIsDown = false
+            onSpaceUp?()
+            return
+        }
+        super.keyUp(with: event)
     }
 
     override func performKeyEquivalent(with event: NSEvent) -> Bool {

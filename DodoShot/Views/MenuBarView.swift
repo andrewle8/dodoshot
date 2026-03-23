@@ -1,7 +1,17 @@
 import SwiftUI
 
+// MARK: - Design Tokens
+private enum Darkroom {
+    static let accent = Color(red: 0x2E / 255.0, green: 0xD0 / 255.0, blue: 0x65 / 255.0) // #2ED065
+    static let animDuration: Double = 0.12
+    static let cardRadius: CGFloat = 14
+    static let toolSize: CGFloat = 28
+}
+
 struct MenuBarView: View {
     @ObservedObject private var captureService = ScreenCaptureService.shared
+    @ObservedObject private var permissionManager = PermissionManager.shared
+    @ObservedObject private var settingsManager = SettingsManager.shared
     @State private var showSettings = false
 
     var body: some View {
@@ -11,7 +21,7 @@ struct MenuBarView: View {
                 VStack(spacing: 0) {
                     // Back button header
                     HStack {
-                        Button(action: { withAnimation(.easeInOut(duration: 0.15)) { showSettings = false } }) {
+                        Button(action: { withAnimation(.easeOut(duration: Darkroom.animDuration)) { showSettings = false } }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 11, weight: .semibold))
@@ -42,25 +52,15 @@ struct MenuBarView: View {
             } else {
                 // Main menu view
                 VStack(spacing: 0) {
-                    // Header
                     headerSection
-
-                    // Main capture options (prominent)
                     mainCaptureSection
-
-                    // Divider with label
                     sectionDivider(label: L10n.Menu.tools)
-
-                    // Tools section (secondary)
                     toolsSection
-
-                    // Recent captures
+                    quickTogglesSection
                     if !captureService.recentCaptures.isEmpty {
                         sectionDivider(label: L10n.Menu.recentCaptures)
                         recentCapturesSection
                     }
-
-                    // Footer
                     footerSection
                 }
                 .frame(width: 300)
@@ -68,7 +68,7 @@ struct MenuBarView: View {
         }
         .background(
             ZStack {
-                VisualEffectBlur(material: .popover, blendingMode: .behindWindow)
+                VisualEffectBlur(material: .hudWindow, blendingMode: .behindWindow)
                 Color(nsColor: .windowBackgroundColor).opacity(0.5)
             }
         )
@@ -78,50 +78,26 @@ struct MenuBarView: View {
     // MARK: - Header
     private var headerSection: some View {
         HStack(spacing: 10) {
-            // App icon with glow effect
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 36, height: 36)
-                    .blur(radius: 4)
-
-                Image(systemName: "camera.viewfinder")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.purple, Color.blue],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            }
+            // Aperture icon in green
+            Image(systemName: "camera.aperture")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(Darkroom.accent)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Shutter")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
 
-                Text("menu.ready".localized)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                Text(permissionManager.allPermissionsGranted ? "Ready" : "menu.ready".localized)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(permissionManager.allPermissionsGranted ? Darkroom.accent : .secondary)
             }
 
             Spacer()
 
             // Settings button
-            HeaderButton(icon: "gearshape", tooltip: L10n.Settings.general) {
+            DarkroomHeaderButton(icon: "gearshape", tooltip: L10n.Settings.general) {
                 openSettings()
-            }
-
-            // History button
-            HeaderButton(icon: "clock.arrow.circlepath", tooltip: L10n.Menu.history) {
-                CaptureHistoryWindowController.shared.showHistory()
             }
         }
         .padding(.horizontal, 14)
@@ -130,89 +106,57 @@ struct MenuBarView: View {
 
     // MARK: - Main Capture Section
     private var mainCaptureSection: some View {
-        VStack(spacing: 6) {
-            // Primary capture buttons in a grid
-            HStack(spacing: 8) {
-                PrimaryCaptureButton(
-                    icon: "rectangle.dashed",
-                    label: L10n.Menu.area,
-                    shortcut: "⌘⇧4",
-                    color: .purple
-                ) {
-                    startCapture(type: .area)
-                }
-
-                PrimaryCaptureButton(
-                    icon: "macwindow",
-                    label: L10n.Menu.window,
-                    shortcut: "⌘⇧5",
-                    color: .blue
-                ) {
-                    startCapture(type: .window)
-                }
-
-                PrimaryCaptureButton(
-                    icon: "rectangle.inset.filled",
-                    label: L10n.Menu.fullscreen,
-                    shortcut: "⌘⇧3",
-                    color: .green
-                ) {
-                    startCapture(type: .fullscreen)
-                }
+        VStack(spacing: 2) {
+            CaptureRow(
+                icon: "viewfinder",
+                label: L10n.Menu.area,
+                shortcut: "\u{2318}\u{21E7}4"
+            ) {
+                startCapture(type: .area)
             }
-            .padding(.horizontal, 12)
+
+            CaptureRow(
+                icon: "macwindow",
+                label: L10n.Menu.window,
+                shortcut: "\u{2318}\u{21E7}5"
+            ) {
+                startWindowPickerCapture()
+            }
+
+            CaptureRow(
+                icon: "rectangle.inset.filled",
+                label: L10n.Menu.fullscreen,
+                shortcut: "\u{2318}\u{21E7}3"
+            ) {
+                startCapture(type: .fullscreen)
+            }
         }
-        .padding(.vertical, 10)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
     }
 
     // MARK: - Tools Section
     private var toolsSection: some View {
-        HStack(spacing: 8) {
-            MenuToolButton(
-                icon: "ruler",
-                label: L10n.Menu.ruler,
-                color: .cyan
-            ) {
-                startPixelRuler()
+        HStack(spacing: 6) {
+            DarkroomToolButton(icon: "arrow.up.and.down.text.horizontal", tooltip: L10n.Menu.scrolling) {
+                startScrollingCapture()
             }
-
-            MenuToolButton(
-                icon: "eyedropper",
-                label: L10n.Menu.colorPicker,
-                color: .pink
-            ) {
-                startColorPicker()
-            }
-
-            MenuToolButton(
-                icon: "timer",
-                label: "Timed",
-                color: .orange
-            ) {
-                startTimedCapture()
-            }
-
-            MenuToolButton(
-                icon: "text.viewfinder",
-                label: L10n.Menu.ocr,
-                color: .teal
-            ) {
+            DarkroomToolButton(icon: "text.viewfinder", tooltip: L10n.Menu.ocr) {
                 startOCRCapture()
             }
-
-            MenuToolButton(
-                icon: "doc.on.clipboard.fill",
-                label: L10n.Menu.paste,
-                color: .indigo
-            ) {
+            DarkroomToolButton(icon: "eyedropper", tooltip: L10n.Menu.colorPicker) {
+                startColorPicker()
+            }
+            DarkroomToolButton(icon: "ruler", tooltip: L10n.Menu.ruler) {
+                startPixelRuler()
+            }
+            DarkroomToolButton(icon: "timer", tooltip: "Timed") {
+                startTimedCapture()
+            }
+            DarkroomToolButton(icon: "doc.on.clipboard.fill", tooltip: L10n.Menu.paste) {
                 startCaptureAndPaste()
             }
-
-            MenuToolButton(
-                icon: "doc.text.viewfinder",
-                label: L10n.Menu.ocrPaste,
-                color: .mint
-            ) {
+            DarkroomToolButton(icon: "doc.text.viewfinder", tooltip: L10n.Menu.ocrPaste) {
                 startOCRCaptureAndPaste()
             }
         }
@@ -220,15 +164,41 @@ struct MenuBarView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Recent Captures
+    // MARK: - Quick Toggles
+    private var quickTogglesSection: some View {
+        VStack(spacing: 0) {
+            Divider().opacity(0.3)
+
+            HStack(spacing: 16) {
+                Toggle(isOn: $settingsManager.settings.autoCopyToClipboard) {
+                    Text("Auto-copy")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .toggleStyle(DarkroomToggleStyle())
+
+                Toggle(isOn: $settingsManager.settings.hideDesktopIcons) {
+                    Text("Hide desktop")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .toggleStyle(DarkroomToggleStyle())
+
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Recent Captures (Contact Sheet)
     private var recentCapturesSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ForEach(captureService.recentCaptures.prefix(6)) { screenshot in
-                    RecentCaptureThumbnail(screenshot: screenshot)
+                    ContactSheetThumbnail(screenshot: screenshot)
                 }
 
-                // Show all button if more than 6
                 if captureService.recentCaptures.count > 6 {
                     ShowAllButton {
                         CaptureHistoryWindowController.shared.showHistory()
@@ -243,29 +213,27 @@ struct MenuBarView: View {
     // MARK: - Footer
     private var footerSection: some View {
         HStack {
-            if !captureService.recentCaptures.isEmpty {
-                Button(action: { captureService.clearRecents() }) {
-                    Label("menu.clearHistory".localized, systemImage: "trash")
+            Button(action: { CaptureHistoryWindowController.shared.showHistory() }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    Text(L10n.Menu.history)
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .buttonStyle(.plain)
-                .opacity(0.7)
-            }
-
-            Spacer()
-
-            Button(action: quitApp) {
-                Label(L10n.Menu.quit, systemImage: "power")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
             .opacity(0.7)
+
+            Spacer()
+
+            DarkroomQuitButton {
+                quitApp()
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.primary.opacity(0.03))
+        .background(Color.white.opacity(0.03))
     }
 
     // MARK: - Section Divider
@@ -277,7 +245,7 @@ struct MenuBarView: View {
                 .tracking(0.5)
 
             Rectangle()
-                .fill(Color.primary.opacity(0.08))
+                .fill(Color.white.opacity(0.06))
                 .frame(height: 1)
         }
         .padding(.horizontal, 14)
@@ -290,6 +258,20 @@ struct MenuBarView: View {
         NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             captureService.startCapture(type: type)
+        }
+    }
+
+    private func startWindowPickerCapture() {
+        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            ScreenCaptureService.shared.showWindowPickerUI()
+        }
+    }
+
+    private func startScrollingCapture() {
+        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            ScreenCaptureService.shared.startScrollingCapture()
         }
     }
 
@@ -308,9 +290,7 @@ struct MenuBarView: View {
     }
 
     private func startTimedCapture() {
-        // Close the popover first
         NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
-        // Show timer selection modal after a brief delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             ScreenCaptureService.shared.showTimedCaptureModal()
         }
@@ -338,7 +318,7 @@ struct MenuBarView: View {
     }
 
     private func openSettings() {
-        withAnimation(.easeInOut(duration: 0.15)) {
+        withAnimation(.easeOut(duration: Darkroom.animDuration)) {
             showSettings = true
         }
     }
@@ -348,8 +328,52 @@ struct MenuBarView: View {
     }
 }
 
+// MARK: - Capture Row (horizontal row with icon, label, shortcut)
+private struct CaptureRow: View {
+    let icon: String
+    let label: String
+    let shortcut: String
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(isHovered ? Darkroom.accent : .white.opacity(0.8))
+                    .frame(width: 20, alignment: .center)
+
+                Text(label)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(isHovered ? .white : .white.opacity(0.85))
+
+                Spacer()
+
+                Text(shortcut)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(isHovered ? Darkroom.accent.opacity(0.8) : .secondary.opacity(0.5))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHovered ? Darkroom.accent.opacity(0.12) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 // MARK: - Header Button
-struct HeaderButton: View {
+struct DarkroomHeaderButton: View {
     let icon: String
     let tooltip: String
     let action: () -> Void
@@ -360,121 +384,112 @@ struct HeaderButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(isHovered ? .primary : .secondary)
+                .foregroundColor(isHovered ? Darkroom.accent : .secondary)
                 .frame(width: 28, height: 28)
                 .background(
                     Circle()
-                        .fill(Color.primary.opacity(isHovered ? 0.1 : 0.05))
+                        .fill(isHovered ? Darkroom.accent.opacity(0.12) : Color.white.opacity(0.05))
                 )
         }
         .buttonStyle(.plain)
         .help(tooltip)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
                 isHovered = hovering
             }
         }
     }
 }
 
-// MARK: - Primary Capture Button
-struct PrimaryCaptureButton: View {
+// MARK: - Tool Button (icon-only, 28x28)
+private struct DarkroomToolButton: View {
     let icon: String
-    let label: String
-    let shortcut: String
-    let color: Color
+    let tooltip: String
     let action: () -> Void
 
     @State private var isHovered = false
-    @State private var isPressed = false
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
-                ZStack {
-                    // Background
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            isHovered
-                                ? color.opacity(0.2)
-                                : color.opacity(0.1)
-                        )
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(isHovered ? Darkroom.accent : .secondary)
+                .frame(width: Darkroom.toolSize, height: Darkroom.toolSize)
+                .background(
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(isHovered ? Darkroom.accent.opacity(0.12) : Color.white.opacity(0.04))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(color.opacity(isHovered ? 0.3 : 0.15), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 7)
+                                .stroke(Color.white.opacity(isHovered ? 0.1 : 0.04), lineWidth: 1)
                         )
-
-                    // Icon
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(color)
-                }
-                .frame(height: 52)
-                .scaleEffect(isPressed ? 0.95 : 1.0)
-
-                // Label
-                Text(label)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.primary.opacity(0.8))
-
-                // Shortcut
-                Text(shortcut)
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundColor(.secondary.opacity(0.6))
-            }
+                )
         }
         .buttonStyle(.plain)
+        .help(tooltip)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
                 isHovered = hovering
             }
         }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.08)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.08)) { isPressed = false } }
-        )
     }
 }
 
-// MARK: - Tool Button
-struct MenuToolButton: View {
-    let icon: String
-    let label: String
-    let color: Color
+// MARK: - Quit Button (dim red on hover)
+private struct DarkroomQuitButton: View {
     let action: () -> Void
 
     @State private var isHovered = false
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(isHovered ? color : .secondary)
-                    .frame(width: 36, height: 36)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isHovered ? color.opacity(0.15) : Color.primary.opacity(0.05))
+            HStack(spacing: 4) {
+                Image(systemName: "power")
+                    .font(.system(size: 11))
+                Text(L10n.Menu.quit)
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .foregroundColor(isHovered ? Color.red.opacity(0.8) : .secondary)
+        }
+        .buttonStyle(.plain)
+        .opacity(0.7)
+        .onHover { hovering in
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+// MARK: - Darkroom Toggle Style (small green switch)
+private struct DarkroomToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.label
+
+            ZStack {
+                Capsule()
+                    .fill(configuration.isOn ? Darkroom.accent.opacity(0.5) : Color.white.opacity(0.1))
+                    .frame(width: 30, height: 16)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
                     )
 
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.secondary)
+                Circle()
+                    .fill(configuration.isOn ? Darkroom.accent : Color.white.opacity(0.5))
+                    .frame(width: 12, height: 12)
+                    .offset(x: configuration.isOn ? 7 : -7)
+                    .animation(.easeOut(duration: Darkroom.animDuration), value: configuration.isOn)
             }
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
-                isHovered = hovering
+            .onTapGesture {
+                configuration.isOn.toggle()
             }
         }
     }
 }
 
-// MARK: - Recent Capture Thumbnail
-struct RecentCaptureThumbnail: View {
+// MARK: - Contact Sheet Thumbnail (film strip aesthetic)
+private struct ContactSheetThumbnail: View {
     let screenshot: Screenshot
 
     @State private var isHovered = false
@@ -486,16 +501,19 @@ struct RecentCaptureThumbnail: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 52, height: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.white.opacity(isHovered ? 0.3 : 0.1), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(
+                                isHovered ? Darkroom.accent.opacity(0.5) : Color.white.opacity(0.12),
+                                lineWidth: 1
+                            )
                     )
-                    .shadow(color: .black.opacity(isHovered ? 0.2 : 0.1), radius: isHovered ? 4 : 2, y: 1)
+                    .shadow(color: .black.opacity(isHovered ? 0.3 : 0.15), radius: isHovered ? 4 : 2, y: 1)
 
-                // Overlay on hover
+                // Hover overlay
                 if isHovered {
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 4)
                         .fill(Color.black.opacity(0.4))
                         .frame(width: 52, height: 40)
 
@@ -509,7 +527,7 @@ struct RecentCaptureThumbnail: View {
         .buttonStyle(.plain)
         .scaleEffect(isHovered ? 1.05 : 1.0)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
                 isHovered = hovering
             }
         }
@@ -547,7 +565,6 @@ struct RecentCaptureThumbnail: View {
     }
 
     private func deleteScreenshot() {
-        // Remove from recents
         ScreenCaptureService.shared.recentCaptures.removeAll { $0.id == screenshot.id }
     }
 }
@@ -563,7 +580,7 @@ struct ShowAllButton: View {
             VStack(spacing: 2) {
                 Image(systemName: "chevron.right.2")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isHovered ? Darkroom.accent : .secondary)
 
                 Text(L10n.Menu.showAll)
                     .font(.system(size: 9))
@@ -571,13 +588,17 @@ struct ShowAllButton: View {
             }
             .frame(width: 36, height: 40)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.primary.opacity(isHovered ? 0.08 : 0.04))
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(isHovered ? Darkroom.accent.opacity(0.08) : Color.white.opacity(0.04))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    )
             )
         }
         .buttonStyle(.plain)
         .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.12)) {
+            withAnimation(.easeOut(duration: Darkroom.animDuration)) {
                 isHovered = hovering
             }
         }
@@ -585,16 +606,56 @@ struct ShowAllButton: View {
 }
 
 // MARK: - Legacy components for compatibility
+struct HeaderButton: View {
+    let icon: String
+    let tooltip: String
+    let action: () -> Void
+
+    var body: some View {
+        DarkroomHeaderButton(icon: icon, tooltip: tooltip, action: action)
+    }
+}
+
+struct PrimaryCaptureButton: View {
+    let icon: String
+    let label: String
+    let shortcut: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        CaptureRow(icon: icon, label: label, shortcut: shortcut, action: action)
+    }
+}
+
+struct MenuToolButton: View {
+    let icon: String
+    let label: String
+    let color: Color
+    let action: () -> Void
+
+    var body: some View {
+        DarkroomToolButton(icon: icon, tooltip: label, action: action)
+    }
+}
+
+struct RecentCaptureThumbnail: View {
+    let screenshot: Screenshot
+
+    var body: some View {
+        ContactSheetThumbnail(screenshot: screenshot)
+    }
+}
+
 struct CaptureOptionButton: View {
     let type: CaptureType
     let action: () -> Void
 
     var body: some View {
-        PrimaryCaptureButton(
+        CaptureRow(
             icon: type.icon,
             label: type.rawValue,
             shortcut: type.shortcut,
-            color: type == .area ? .purple : (type == .window ? .blue : .green),
             action: action
         )
     }
@@ -608,12 +669,7 @@ struct MeasurementMenuToolButton: View {
     let action: () -> Void
 
     var body: some View {
-        MenuToolButton(
-            icon: icon,
-            label: label,
-            color: gradient.first ?? .gray,
-            action: action
-        )
+        DarkroomToolButton(icon: icon, tooltip: label, action: action)
     }
 }
 
@@ -621,7 +677,7 @@ struct RecentCaptureThumb: View {
     let screenshot: Screenshot
 
     var body: some View {
-        RecentCaptureThumbnail(screenshot: screenshot)
+        ContactSheetThumbnail(screenshot: screenshot)
     }
 }
 

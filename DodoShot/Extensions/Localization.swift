@@ -111,6 +111,12 @@ enum L10n {
         static let autoPasteCapture = "settings.autoPasteCapture".localized
         static let ocrPasteCapture = "settings.ocrPasteCapture".localized
         static let allScreensCapture = "settings.allScreensCapture".localized
+        static let scrollingCapture = "settings.scrollingCapture".localized
+        static let ocrCapture = "settings.ocrCapture".localized
+        static let colorPickerHotkey = "settings.colorPickerHotkey".localized
+        static let pixelRuler = "settings.pixelRuler".localized
+        static let timedCapture = "settings.timedCapture".localized
+        static let activeWindowCapture = "settings.activeWindowCapture".localized
         static let recording = "settings.recording".localized
         static let permissions = "settings.permissions".localized
         static let permissionsDescription = "settings.permissions.description".localized

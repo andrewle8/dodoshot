@@ -50,6 +50,35 @@ class ScreenCaptureService: ObservableObject {
         startOCRCapture()
     }
 
+    /// Capture the frontmost non-Shutter window immediately (no picker UI).
+    /// This is the default behaviour for the window capture hotkey.
+    func captureActiveWindow() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+
+        let windows = WindowInfo.getVisibleWindows()
+        if let frontmost = windows.first(where: { $0.ownerName != "Shutter" }) {
+            captureWindow(frontmost)
+        } else if let first = windows.first {
+            captureWindow(first)
+        } else {
+            isCapturing = false
+        }
+    }
+
+    /// Show the interactive window picker overlay so the user can choose a window.
+    func showWindowPickerUI() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+
+        let windows = WindowInfo.getVisibleWindows()
+        if windows.isEmpty {
+            isCapturing = false
+            return
+        }
+        showWindowPicker(windows: windows)
+    }
+
     /// Capture all screens into a single image
     func captureAllScreens() {
         isCapturing = true

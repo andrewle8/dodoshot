@@ -653,18 +653,44 @@ struct HotkeySettings: Codable {
     var autoPasteCapture: String
     var ocrPasteCapture: String
     var allScreensCapture: String
+    var scrollingCapture: String
+    var ocrCapture: String
+    var colorPicker: String
+    var pixelRuler: String
+    var timedCapture: String
+    var activeWindowCapture: String
 
     enum CodingKeys: String, CodingKey {
         case areaCapture, windowCapture, fullscreenCapture, autoPasteCapture, ocrPasteCapture, allScreensCapture
+        case scrollingCapture, ocrCapture, colorPicker, pixelRuler, timedCapture, activeWindowCapture
     }
 
-    init(areaCapture: String, windowCapture: String, fullscreenCapture: String, autoPasteCapture: String = "⌘⇧6", ocrPasteCapture: String = "⌘⇧7", allScreensCapture: String = "⌘⇧⌥3") {
+    init(
+        areaCapture: String,
+        windowCapture: String,
+        fullscreenCapture: String,
+        autoPasteCapture: String = "⌘⇧6",
+        ocrPasteCapture: String = "⌘⇧7",
+        allScreensCapture: String = "⌘⇧⌥3",
+        scrollingCapture: String = "⌘⇧2",
+        ocrCapture: String = "⌘⇧8",
+        colorPicker: String = "⌘⇧C",
+        pixelRuler: String = "⌘⇧R",
+        timedCapture: String = "⌘⇧T",
+        activeWindowCapture: String = "⌘⇧W"
+    ) {
         self.areaCapture = areaCapture
         self.windowCapture = windowCapture
         self.fullscreenCapture = fullscreenCapture
         self.autoPasteCapture = autoPasteCapture
         self.ocrPasteCapture = ocrPasteCapture
         self.allScreensCapture = allScreensCapture
+        self.scrollingCapture = scrollingCapture
+        self.ocrCapture = ocrCapture
+        self.colorPicker = colorPicker
+        self.pixelRuler = pixelRuler
+        self.timedCapture = timedCapture
+        self.activeWindowCapture = activeWindowCapture
     }
 
     init(from decoder: Decoder) throws {
@@ -675,6 +701,12 @@ struct HotkeySettings: Codable {
         autoPasteCapture = try container.decodeIfPresent(String.self, forKey: .autoPasteCapture) ?? "⌘⇧6"
         ocrPasteCapture = try container.decodeIfPresent(String.self, forKey: .ocrPasteCapture) ?? "⌘⇧7"
         allScreensCapture = try container.decodeIfPresent(String.self, forKey: .allScreensCapture) ?? "⌘⇧⌥3"
+        scrollingCapture = try container.decodeIfPresent(String.self, forKey: .scrollingCapture) ?? "⌘⇧2"
+        ocrCapture = try container.decodeIfPresent(String.self, forKey: .ocrCapture) ?? "⌘⇧8"
+        colorPicker = try container.decodeIfPresent(String.self, forKey: .colorPicker) ?? "⌘⇧C"
+        pixelRuler = try container.decodeIfPresent(String.self, forKey: .pixelRuler) ?? "⌘⇧R"
+        timedCapture = try container.decodeIfPresent(String.self, forKey: .timedCapture) ?? "⌘⇧T"
+        activeWindowCapture = try container.decodeIfPresent(String.self, forKey: .activeWindowCapture) ?? "⌘⇧W"
     }
 
     static var `default`: HotkeySettings {
@@ -684,7 +716,13 @@ struct HotkeySettings: Codable {
             fullscreenCapture: "⌘⇧3",
             autoPasteCapture: "⌘⇧6",
             ocrPasteCapture: "⌘⇧7",
-            allScreensCapture: "⌘⇧⌥3"
+            allScreensCapture: "⌘⇧⌥3",
+            scrollingCapture: "⌘⇧2",
+            ocrCapture: "⌘⇧8",
+            colorPicker: "⌘⇧C",
+            pixelRuler: "⌘⇧R",
+            timedCapture: "⌘⇧T",
+            activeWindowCapture: "⌘⇧W"
         )
     }
 }
