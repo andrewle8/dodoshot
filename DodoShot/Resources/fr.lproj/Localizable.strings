@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Shutter - French (Français)
+  Lucida - French (Français)
 */
 
 // MARK: - Menu Bar
@@ -18,7 +18,7 @@
 "menu.noRecentCaptures" = "Aucune capture récente";
 "menu.showAll" = "Tout afficher";
 "menu.settings" = "Réglages";
-"menu.quit" = "Quitter Shutter";
+"menu.quit" = "Quitter Lucida";
 "menu.history" = "Historique";
 "menu.paste" = "Coller";
 "menu.ocrPaste" = "OCR Paste";
@@ -79,7 +79,7 @@
 
 // Settings - General
 "settings.appearance" = "Apparence";
-"settings.appearance.description" = "Choisissez l'apparence de Shutter";
+"settings.appearance.description" = "Choisissez l'apparence de Lucida";
 "settings.appearance.system" = "Système";
 "settings.appearance.light" = "Clair";
 "settings.appearance.dark" = "Sombre";
@@ -119,7 +119,7 @@
 "settings.recaptureLastArea" = "Recapturer la dernière zone";
 "settings.recording" = "Enregistrement...";
 "settings.permissions" = "Autorisation d'accessibilité requise";
-"settings.permissions.description" = "Shutter nécessite l'accès à l'accessibilité pour les raccourcis globaux.";
+"settings.permissions.description" = "Lucida nécessite l'accès à l'accessibilité pour les raccourcis globaux.";
 "settings.openSettings" = "Ouvrir les réglages";
 
 // Settings - AI
@@ -160,7 +160,7 @@
 
 // MARK: - Permissions
 "permissions.title" = "Autorisations requises";
-"permissions.description" = "Shutter nécessite les autorisations d'enregistrement d'écran et d'accessibilité pour capturer des écrans et utiliser les raccourcis globaux.";
+"permissions.description" = "Lucida nécessite les autorisations d'enregistrement d'écran et d'accessibilité pour capturer des écrans et utiliser les raccourcis globaux.";
 "permissions.screenRecording" = "Enregistrement d'écran";
 "permissions.screenRecording.description" = "Requis pour les captures d'écran";
 "permissions.accessibility" = "Accessibilité";
@@ -171,9 +171,9 @@
 "permissions.restart" = "Redémarrer";
 "permissions.later" = "Je ferai ça plus tard";
 "permissions.instructions" = "Si déjà activé mais ne fonctionne pas :";
-"permissions.step1" = "1. Supprimez Shutter de la liste des autorisations";
+"permissions.step1" = "1. Supprimez Lucida de la liste des autorisations";
 "permissions.step2" = "2. Cliquez sur \"Afficher dans le Finder\" et glissez l'app";
-"permissions.step3" = "3. Redémarrez Shutter";
+"permissions.step3" = "3. Redémarrez Lucida";
 
 // MARK: - Window Selection
 "windowSelection.title" = "Sélectionnez une fenêtre à capturer";

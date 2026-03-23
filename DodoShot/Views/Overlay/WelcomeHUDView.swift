@@ -112,7 +112,7 @@ struct WelcomeHUDView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Shutter is ready")
+                    Text("Lucida is ready")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.primary)
 

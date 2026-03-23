@@ -13,15 +13,21 @@ class SettingsManager: ObservableObject {
     }
 
     private let userDefaults = UserDefaults.standard
-    private let settingsKey = "ShutterSettings"
+    private let settingsKey = "LucidaSettings"
 
     private init() {
-        // Migrate from old key if needed
+        // Migrate from old key if needed (DodoShotSettings -> ShutterSettings -> LucidaSettings)
         if let oldData = userDefaults.data(forKey: "DodoShotSettings") {
+            if userDefaults.data(forKey: "ShutterSettings") == nil {
+                userDefaults.set(oldData, forKey: "ShutterSettings")
+            }
+            userDefaults.removeObject(forKey: "DodoShotSettings")
+        }
+        if let oldData = userDefaults.data(forKey: "ShutterSettings") {
             if userDefaults.data(forKey: settingsKey) == nil {
                 userDefaults.set(oldData, forKey: settingsKey)
             }
-            userDefaults.removeObject(forKey: "DodoShotSettings")
+            userDefaults.removeObject(forKey: "ShutterSettings")
         }
 
         if let data = userDefaults.data(forKey: settingsKey),

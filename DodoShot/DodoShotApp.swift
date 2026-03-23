@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct ShutterApp: App {
+struct LucidaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -84,15 +84,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls {
-            if url.pathExtension.lowercased() == "shutter" {
-                openShutterProject(at: url)
+            if url.pathExtension.lowercased() == "lucida" {
+                openLucidaProject(at: url)
             }
         }
     }
 
-    private func openShutterProject(at url: URL) {
+    private func openLucidaProject(at url: URL) {
         do {
-            let project = try ShutterProject.load(from: url)
+            let project = try LucidaProject.load(from: url)
             if let screenshot = project.toScreenshot() {
                 // Screenshot stores image as Data internally, so no deep copy needed
                 AnnotationEditorWindowController.shared.showEditor(for: screenshot) { updatedScreenshot in
@@ -124,7 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         // Log termination for debugging
-        print("Shutter: applicationShouldTerminate called")
+        print("Lucida: applicationShouldTerminate called")
         Thread.callStackSymbols.forEach { print($0) }
         return .terminateNow
     }
@@ -134,7 +134,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         if let button = statusItem.button {
             let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            if let image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "Shutter")?.withSymbolConfiguration(config) {
+            if let image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "Lucida")?.withSymbolConfiguration(config) {
                 image.isTemplate = true
                 button.image = image
             }
@@ -172,7 +172,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Shutter", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit Lucida", action: #selector(quitApp), keyEquivalent: "q"))
 
         statusItem.menu = nil // We'll show it manually on right-click
     }
@@ -221,7 +221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit Shutter", action: #selector(quitApp), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit Lucida", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -271,7 +271,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        panel.title = "Shutter Settings"
+        panel.title = "Lucida Settings"
         panel.backgroundColor = NSColor.windowBackgroundColor
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false

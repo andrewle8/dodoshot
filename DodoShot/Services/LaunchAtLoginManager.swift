@@ -31,7 +31,7 @@ class LaunchAtLoginManager {
             }
         } else {
             // For older macOS versions, use the deprecated API
-            let bundleId = Bundle.main.bundleIdentifier ?? "com.shutter.Shutter"
+            let bundleId = Bundle.main.bundleIdentifier ?? "com.lucida.Lucida"
             SMLoginItemSetEnabled(bundleId as CFString, enabled)
         }
     }

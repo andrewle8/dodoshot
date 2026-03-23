@@ -84,7 +84,7 @@ struct MenuBarView: View {
                 .foregroundColor(Darkroom.accent)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("Shutter")
+                Text("Lucida")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
 

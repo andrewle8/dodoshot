@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Shutter - English
+  Lucida - English
 */
 
 // MARK: - Menu Bar
@@ -18,7 +18,7 @@
 "menu.noRecentCaptures" = "No recent captures";
 "menu.showAll" = "Show All";
 "menu.settings" = "Settings";
-"menu.quit" = "Quit Shutter";
+"menu.quit" = "Quit Lucida";
 "menu.history" = "History";
 "menu.paste" = "Paste";
 "menu.ocrPaste" = "OCR Paste";
@@ -79,7 +79,7 @@
 
 // Settings - General
 "settings.appearance" = "Appearance";
-"settings.appearance.description" = "Choose how Shutter looks";
+"settings.appearance.description" = "Choose how Lucida looks";
 "settings.appearance.system" = "System";
 "settings.appearance.light" = "Light";
 "settings.appearance.dark" = "Dark";
@@ -119,7 +119,7 @@
 "settings.recaptureLastArea" = "Re-capture last area";
 "settings.recording" = "Recording...";
 "settings.permissions" = "Accessibility permission required";
-"settings.permissions.description" = "Shutter needs accessibility access for global hotkeys to work.";
+"settings.permissions.description" = "Lucida needs accessibility access for global hotkeys to work.";
 "settings.openSettings" = "Open settings";
 
 // Settings - AI
@@ -160,7 +160,7 @@
 
 // MARK: - Permissions
 "permissions.title" = "Permissions Required";
-"permissions.description" = "Shutter needs Screen Recording and Accessibility permissions to capture screenshots and use global hotkeys.";
+"permissions.description" = "Lucida needs Screen Recording and Accessibility permissions to capture screenshots and use global hotkeys.";
 "permissions.screenRecording" = "Screen Recording";
 "permissions.screenRecording.description" = "Required to capture screenshots";
 "permissions.accessibility" = "Accessibility";
@@ -171,9 +171,9 @@
 "permissions.restart" = "Restart";
 "permissions.later" = "I'll do this later";
 "permissions.instructions" = "If already enabled but not working:";
-"permissions.step1" = "1. Remove Shutter from the permission list";
+"permissions.step1" = "1. Remove Lucida from the permission list";
 "permissions.step2" = "2. Click \"Show in Finder\" and drag the app back";
-"permissions.step3" = "3. Restart Shutter";
+"permissions.step3" = "3. Restart Lucida";
 
 // MARK: - Window Selection
 "windowSelection.title" = "Select a window to capture";

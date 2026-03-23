@@ -2,7 +2,7 @@ import Foundation
 import AppKit
 
 /// Persistent on-disk history for captured screenshots.
-/// Stores PNG files in ~/Library/Application Support/Shutter/History/
+/// Stores PNG files in ~/Library/Application Support/Lucida/History/
 /// with a JSON index for metadata.
 @MainActor
 class HistoryStore: ObservableObject {
@@ -23,7 +23,7 @@ class HistoryStore: ObservableObject {
 
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        historyDir = appSupport.appendingPathComponent("Shutter/History")
+        historyDir = appSupport.appendingPathComponent("Lucida/History")
         indexFile = historyDir.appendingPathComponent("index.json")
 
         try? FileManager.default.createDirectory(at: historyDir, withIntermediateDirectories: true)

@@ -1,7 +1,7 @@
 /*
   InfoPlist.strings
-  Shutter - German (Deutsch)
+  Lucida - German (Deutsch)
 */
 
-"CFBundleDisplayName" = "Shutter";
+"CFBundleDisplayName" = "Lucida";
 "NSHumanReadableCopyright" = "Copyright © 2024 Bluewave Labs. Alle Rechte vorbehalten.";

@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Shutter - German (Deutsch)
+  Lucida - German (Deutsch)
 */
 
 // MARK: - Menu Bar
@@ -18,7 +18,7 @@
 "menu.noRecentCaptures" = "Keine letzten Aufnahmen";
 "menu.showAll" = "Alle anzeigen";
 "menu.settings" = "Einstellungen";
-"menu.quit" = "Shutter beenden";
+"menu.quit" = "Lucida beenden";
 "menu.history" = "Verlauf";
 "menu.paste" = "Einfügen";
 "menu.ocrPaste" = "OCR Paste";
@@ -79,7 +79,7 @@
 
 // Settings - General
 "settings.appearance" = "Erscheinungsbild";
-"settings.appearance.description" = "Wählen Sie das Aussehen von Shutter";
+"settings.appearance.description" = "Wählen Sie das Aussehen von Lucida";
 "settings.appearance.system" = "System";
 "settings.appearance.light" = "Hell";
 "settings.appearance.dark" = "Dunkel";
@@ -119,7 +119,7 @@
 "settings.recaptureLastArea" = "Letzte Bereichsaufnahme wiederholen";
 "settings.recording" = "Aufnahme...";
 "settings.permissions" = "Bedienungshilfen-Berechtigung erforderlich";
-"settings.permissions.description" = "Shutter benötigt Bedienungshilfen-Zugriff für globale Tastenkürzel.";
+"settings.permissions.description" = "Lucida benötigt Bedienungshilfen-Zugriff für globale Tastenkürzel.";
 "settings.openSettings" = "Einstellungen öffnen";
 
 // Settings - AI
@@ -160,7 +160,7 @@
 
 // MARK: - Permissions
 "permissions.title" = "Berechtigungen erforderlich";
-"permissions.description" = "Shutter benötigt Bildschirmaufnahme- und Bedienungshilfen-Berechtigungen für Screenshots und globale Tastenkürzel.";
+"permissions.description" = "Lucida benötigt Bildschirmaufnahme- und Bedienungshilfen-Berechtigungen für Screenshots und globale Tastenkürzel.";
 "permissions.screenRecording" = "Bildschirmaufnahme";
 "permissions.screenRecording.description" = "Für Screenshots erforderlich";
 "permissions.accessibility" = "Bedienungshilfen";
@@ -171,9 +171,9 @@
 "permissions.restart" = "Neustart";
 "permissions.later" = "Später";
 "permissions.instructions" = "Falls aktiviert aber nicht funktioniert:";
-"permissions.step1" = "1. Shutter aus der Berechtigungsliste entfernen";
+"permissions.step1" = "1. Lucida aus der Berechtigungsliste entfernen";
 "permissions.step2" = "2. Auf \"Im Finder anzeigen\" klicken und App zurückziehen";
-"permissions.step3" = "3. Shutter neu starten";
+"permissions.step3" = "3. Lucida neu starten";
 
 // MARK: - Window Selection
 "windowSelection.title" = "Fenster zum Aufnehmen auswählen";

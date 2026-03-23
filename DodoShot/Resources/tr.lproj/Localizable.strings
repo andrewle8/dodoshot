@@ -1,6 +1,6 @@
 /*
   Localizable.strings
-  Shutter - Turkish (Türkçe)
+  Lucida - Turkish (Türkçe)
 */
 
 // MARK: - Menu Bar
@@ -18,7 +18,7 @@
 "menu.noRecentCaptures" = "Son yakalama yok";
 "menu.showAll" = "Tümünü Göster";
 "menu.settings" = "Ayarlar";
-"menu.quit" = "Shutter'tan Çık";
+"menu.quit" = "Lucida'tan Çık";
 "menu.history" = "Geçmiş";
 "menu.paste" = "Yapıştır";
 "menu.ocrPaste" = "OCR Paste";
@@ -79,7 +79,7 @@
 
 // Settings - General
 "settings.appearance" = "Görünüm";
-"settings.appearance.description" = "Shutter'un nasıl görüneceğini seçin";
+"settings.appearance.description" = "Lucida'un nasıl görüneceğini seçin";
 "settings.appearance.system" = "Sistem";
 "settings.appearance.light" = "Açık";
 "settings.appearance.dark" = "Koyu";
@@ -119,7 +119,7 @@
 "settings.recaptureLastArea" = "Son alani yeniden yakala";
 "settings.recording" = "Kaydediliyor...";
 "settings.permissions" = "Erişilebilirlik izni gerekli";
-"settings.permissions.description" = "Shutter'un global kısayolları çalışması için erişilebilirlik izni gereklidir.";
+"settings.permissions.description" = "Lucida'un global kısayolları çalışması için erişilebilirlik izni gereklidir.";
 "settings.openSettings" = "Ayarları aç";
 
 // Settings - AI
@@ -160,7 +160,7 @@
 
 // MARK: - Permissions
 "permissions.title" = "İzinler Gerekli";
-"permissions.description" = "Shutter'un ekran görüntüsü alması ve global kısayolları kullanması için Ekran Kaydı ve Erişilebilirlik izinleri gereklidir.";
+"permissions.description" = "Lucida'un ekran görüntüsü alması ve global kısayolları kullanması için Ekran Kaydı ve Erişilebilirlik izinleri gereklidir.";
 "permissions.screenRecording" = "Ekran Kaydı";
 "permissions.screenRecording.description" = "Ekran görüntüsü almak için gerekli";
 "permissions.accessibility" = "Erişilebilirlik";
@@ -171,9 +171,9 @@
 "permissions.restart" = "Yeniden Başlat";
 "permissions.later" = "Daha sonra yapacağım";
 "permissions.instructions" = "Zaten etkinse ancak çalışmıyorsa:";
-"permissions.step1" = "1. Shutter'u izin listesinden kaldırın";
+"permissions.step1" = "1. Lucida'u izin listesinden kaldırın";
 "permissions.step2" = "2. \"Finder'da Göster\"e tıklayın ve uygulamayı geri sürükleyin";
-"permissions.step3" = "3. Shutter'u yeniden başlatın";
+"permissions.step3" = "3. Lucida'u yeniden başlatın";
 
 // MARK: - Window Selection
 "windowSelection.title" = "Yakalanacak pencereyi seçin";

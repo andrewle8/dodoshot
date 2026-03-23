@@ -165,14 +165,14 @@ class ScreenCaptureService: ObservableObject {
         captureWindows.append(window)
     }
 
-    /// Capture the frontmost non-Shutter window immediately (no picker UI).
+    /// Capture the frontmost non-Lucida window immediately (no picker UI).
     /// This is the default behaviour for the window capture hotkey.
     func captureActiveWindow() {
         previousApp = NSWorkspace.shared.frontmostApplication
         isCapturing = true
 
         let windows = WindowInfo.getVisibleWindows()
-        if let frontmost = windows.first(where: { $0.ownerName != "Shutter" }) {
+        if let frontmost = windows.first(where: { $0.ownerName != "Lucida" }) {
             captureWindow(frontmost)
         } else if let first = windows.first {
             captureWindow(first)
@@ -667,11 +667,11 @@ class ScreenCaptureService: ObservableObject {
             return
         }
 
-        // Auto-capture the frontmost window (first in the list, excluding Shutter itself)
-        if let frontmostWindow = windows.first(where: { $0.ownerName != "Shutter" }) {
+        // Auto-capture the frontmost window (first in the list, excluding Lucida itself)
+        if let frontmostWindow = windows.first(where: { $0.ownerName != "Lucida" }) {
             captureWindow(frontmostWindow)
         } else if let firstWindow = windows.first {
-            // Fallback to first window if all are Shutter windows
+            // Fallback to first window if all are Lucida windows
             captureWindow(firstWindow)
         } else {
             isCapturing = false
@@ -1010,7 +1010,7 @@ class ScreenCaptureService: ObservableObject {
         if captureForClaudeMode {
             captureForClaudeMode = false
             let timestamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
-            let filePath = "/tmp/shutter-capture-\(timestamp).png"
+            let filePath = "/tmp/lucida-capture-\(timestamp).png"
             try? pngData.write(to: URL(fileURLWithPath: filePath))
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(filePath, forType: .string)
@@ -1109,7 +1109,7 @@ class ScreenCaptureService: ObservableObject {
     private func getDefaultSaveURL() -> URL {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        let filename = "Shutter_\(dateFormatter.string(from: Date())).png"
+        let filename = "Lucida_\(dateFormatter.string(from: Date())).png"
 
         let saveLocation = SettingsManager.shared.settings.saveLocation
         return URL(fileURLWithPath: saveLocation).appendingPathComponent(filename)

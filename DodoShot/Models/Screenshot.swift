@@ -177,7 +177,7 @@ struct Annotation: Identifiable, Codable {
         case id, type, startPoint, endPoint, colorHex, strokeWidth, text, points, fontSize, fontWeight, fontName, calloutArrowDirection, stepNumber, stepCounterFormat, redactionStyle, redactionIntensity, zIndex
     }
 
-    // Custom decoder to handle missing keys from older .shutter files
+    // Custom decoder to handle missing keys from older .lucida files
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(UUID.self, forKey: .id)
@@ -456,7 +456,7 @@ struct AppSettings: Codable {
         defaultStrokeWidth = try container.decodeIfPresent(Double.self, forKey: .defaultStrokeWidth) ?? 3.0
         defaultAnnotationTool = try container.decodeIfPresent(String.self, forKey: .defaultAnnotationTool) ?? "arrow"
         textAnnotationSettings = try container.decodeIfPresent(TextAnnotationSettings.self, forKey: .textAnnotationSettings) ?? .default
-        filenameTemplate = try container.decodeIfPresent(String.self, forKey: .filenameTemplate) ?? "Shutter_{date}_{time}"
+        filenameTemplate = try container.decodeIfPresent(String.self, forKey: .filenameTemplate) ?? "Lucida_{date}_{time}"
         sequentialNumber = try container.decodeIfPresent(Int.self, forKey: .sequentialNumber) ?? 1
         autoSaveOnEditorClose = try container.decodeIfPresent(Bool.self, forKey: .autoSaveOnEditorClose) ?? false
         autoCopyOnEditorClose = try container.decodeIfPresent(Bool.self, forKey: .autoCopyOnEditorClose) ?? true
@@ -629,7 +629,7 @@ struct AppSettings: Codable {
             defaultStrokeWidth: 3.0,
             defaultAnnotationTool: "arrow",
             textAnnotationSettings: .default,
-            filenameTemplate: "Shutter_{date}_{time}",
+            filenameTemplate: "Lucida_{date}_{time}",
             sequentialNumber: 1,
             autoSaveOnEditorClose: false,
             autoCopyOnEditorClose: true,
@@ -834,11 +834,11 @@ extension NSColor {
     }
 }
 
-// MARK: - Shutter Project File Format (.shutter)
+// MARK: - Lucida Project File Format (.lucida)
 /// A file format that stores the screenshot image and annotations together
-struct ShutterProject: Codable {
-    static let fileExtension = "shutter"
-    static let utType = "com.shutter.project"
+struct LucidaProject: Codable {
+    static let fileExtension = "lucida"
+    static let utType = "com.lucida.project"
 
     let version: Int
     let createdAt: Date
@@ -924,15 +924,15 @@ struct ShutterProject: Codable {
     }
 
     /// Load project from file
-    static func load(from url: URL) throws -> ShutterProject {
+    static func load(from url: URL) throws -> LucidaProject {
         let data = try Data(contentsOf: url)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(ShutterProject.self, from: data)
+        return try decoder.decode(LucidaProject.self, from: data)
     }
 }
 
-enum ShutterProjectError: Error, LocalizedError {
+enum LucidaProjectError: Error, LocalizedError {
     case imageConversionFailed
     case invalidFileFormat
 
@@ -941,7 +941,7 @@ enum ShutterProjectError: Error, LocalizedError {
         case .imageConversionFailed:
             return "Failed to convert image to PNG format"
         case .invalidFileFormat:
-            return "Invalid Shutter project file"
+            return "Invalid Lucida project file"
         }
     }
 }

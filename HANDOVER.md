@@ -1,7 +1,7 @@
-# Shutter Fork — Handover
+# Lucida Fork — Handover
 
 ## What's Done
-- Forked andrewle8/shutter
+- Forked andrewle8/lucida
 - Cloned to `~/repos/dodoshot`
 - Remotes: `origin` = your fork, `upstream` = original repo
 - Version: 1.4.5 (latest, released 2026-03-19)
@@ -12,7 +12,7 @@
 **Root cause:** `AppDelegate.openSettingsWindow()` creates a manual `NSWindow` with `NSHostingView(rootView: SettingsView())`. On macOS 26 with `.accessory` activation policy (no dock icon, which is the default), the SwiftUI content inside `NSHostingView` fails to render.
 
 **The app has TWO settings paths:**
-1. SwiftUI `Settings` scene in `ShutterApp.body` (Cmd+, path)
+1. SwiftUI `Settings` scene in `LucidaApp.body` (Cmd+, path)
 2. Manual `NSWindow` + `NSHostingView` in `AppDelegate.openSettingsWindow()` (menu click path)
 
 Path 2 is broken on macOS 26.

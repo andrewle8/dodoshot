@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 // MARK: - Accent color constant
-private let shutterGreen = Color(red: 0x2E / 255.0, green: 0xD0 / 255.0, blue: 0x65 / 255.0)
+private let lucidaGreen = Color(red: 0x2E / 255.0, green: 0xD0 / 255.0, blue: 0x65 / 255.0)
 
 struct AreaSelectionView: View {
     let onComplete: (CGRect) -> Void
@@ -362,7 +362,7 @@ struct DimensionLabel: View {
     var body: some View {
         Text(dimensionText)
             .font(.system(size: 12, weight: .medium, design: .monospaced))
-            .foregroundColor(shutterGreen)
+            .foregroundColor(lucidaGreen)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
@@ -432,7 +432,7 @@ struct CoordinateLabel: View {
 
         Text(text)
             .font(.system(size: 11, weight: .medium, design: .monospaced))
-            .foregroundColor(shutterGreen)
+            .foregroundColor(lucidaGreen)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(
