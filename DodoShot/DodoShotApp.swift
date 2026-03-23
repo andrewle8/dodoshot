@@ -134,7 +134,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         if let button = statusItem.button {
             let config = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-            if let image = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: "Shutter")?.withSymbolConfiguration(config) {
+            if let image = NSImage(systemSymbolName: "camera.aperture", accessibilityDescription: "Shutter")?.withSymbolConfiguration(config) {
                 image.isTemplate = true
                 button.image = image
             }
@@ -260,26 +260,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             popover.performClose(nil)
         }
 
-        // Always close and recreate — all working windows in this app create fresh each time
+        // Always close and recreate
         settingsWindow?.close()
         settingsWindow = nil
 
-        let window = NSWindow(
+        // Use NSPanel — designed for utility/inspector windows under .accessory activation policy
+        let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 420),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .utilityWindow],
             backing: .buffered,
             defer: false
         )
-        window.title = "Shutter Settings"
-        window.backgroundColor = NSColor.windowBackgroundColor
-        window.collectionBehavior = [.managed, .participatesInCycle]
-        window.isReleasedWhenClosed = false
-        window.delegate = self
-        window.center()
-        window.contentView = NSHostingView(rootView: SettingsView())
-        window.makeKeyAndOrderFront(nil)
+        panel.title = "Shutter Settings"
+        panel.backgroundColor = NSColor.windowBackgroundColor
+        panel.isFloatingPanel = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.becomesKeyOnlyIfNeeded = false
+        panel.delegate = self
+        panel.center()
+        panel.contentView = NSHostingView(rootView: SettingsView())
+        panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        settingsWindow = window
+        settingsWindow = panel
     }
 
     func windowWillClose(_ notification: Notification) {
