@@ -446,7 +446,8 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.areaCapture,
                             icon: "rectangle.dashed",
                             iconColor: .purple,
-                            hotkey: $settingsManager.settings.hotkeys.areaCapture
+                            hotkey: $settingsManager.settings.hotkeys.areaCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.areaCapture)
                         )
 
                         Divider()
@@ -456,7 +457,8 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.windowCapture,
                             icon: "macwindow",
                             iconColor: .blue,
-                            hotkey: $settingsManager.settings.hotkeys.windowCapture
+                            hotkey: $settingsManager.settings.hotkeys.windowCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.windowCapture)
                         )
 
                         Divider()
@@ -466,7 +468,8 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.fullscreenCapture,
                             icon: "rectangle.inset.filled",
                             iconColor: .green,
-                            hotkey: $settingsManager.settings.hotkeys.fullscreenCapture
+                            hotkey: $settingsManager.settings.hotkeys.fullscreenCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.fullscreenCapture)
                         )
 
                         Divider()
@@ -476,7 +479,8 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.autoPasteCapture,
                             icon: "doc.on.clipboard.fill",
                             iconColor: .indigo,
-                            hotkey: $settingsManager.settings.hotkeys.autoPasteCapture
+                            hotkey: $settingsManager.settings.hotkeys.autoPasteCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.autoPasteCapture)
                         )
 
                         Divider()
@@ -486,7 +490,8 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.ocrPasteCapture,
                             icon: "doc.text.viewfinder",
                             iconColor: .teal,
-                            hotkey: $settingsManager.settings.hotkeys.ocrPasteCapture
+                            hotkey: $settingsManager.settings.hotkeys.ocrPasteCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.ocrPasteCapture)
                         )
 
                         Divider()
@@ -496,7 +501,74 @@ struct HotkeysSettingsTab: View {
                             label: L10n.Settings.allScreensCapture,
                             icon: "rectangle.on.rectangle",
                             iconColor: .green,
-                            hotkey: $settingsManager.settings.hotkeys.allScreensCapture
+                            hotkey: $settingsManager.settings.hotkeys.allScreensCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.allScreensCapture)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.scrollingCapture,
+                            icon: "scroll",
+                            iconColor: .orange,
+                            hotkey: $settingsManager.settings.hotkeys.scrollingCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.scrollingCapture)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.ocrCapture,
+                            icon: "doc.text.viewfinder",
+                            iconColor: .cyan,
+                            hotkey: $settingsManager.settings.hotkeys.ocrCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.ocrCapture)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.colorPickerHotkey,
+                            icon: "eyedropper",
+                            iconColor: .pink,
+                            hotkey: $settingsManager.settings.hotkeys.colorPicker,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.colorPicker)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.pixelRuler,
+                            icon: "ruler",
+                            iconColor: .yellow,
+                            hotkey: $settingsManager.settings.hotkeys.pixelRuler,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.pixelRuler)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.timedCapture,
+                            icon: "timer",
+                            iconColor: .mint,
+                            hotkey: $settingsManager.settings.hotkeys.timedCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.timedCapture)
+                        )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.activeWindowCapture,
+                            icon: "macwindow.badge.plus",
+                            iconColor: .indigo,
+                            hotkey: $settingsManager.settings.hotkeys.activeWindowCapture,
+                            hasConflict: HotkeyManager.shared.conflictingHotkeys.contains(settingsManager.settings.hotkeys.activeWindowCapture)
                         )
                     }
                 }
@@ -515,6 +587,7 @@ struct HotkeyRow: View {
     let icon: String
     let iconColor: Color
     @Binding var hotkey: String
+    var hasConflict: Bool = false
 
     @State private var isRecording = false
     @State private var isHovered = false
@@ -536,6 +609,14 @@ struct HotkeyRow: View {
             // Label
             Text(label)
                 .font(.system(size: 13, weight: .medium))
+
+            // Conflict indicator
+            if hasConflict {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                    .help("Hotkey conflict: another shortcut uses the same key combination")
+            }
 
             Spacer()
 

@@ -95,6 +95,12 @@
 "settings.autoPasteCapture" = "Captura y pegado automático";
 "settings.ocrPasteCapture" = "Captura OCR y pegado";
 "settings.allScreensCapture" = "Captura de todas las pantallas";
+"settings.scrollingCapture" = "Captura con desplazamiento";
+"settings.ocrCapture" = "Captura OCR";
+"settings.colorPickerHotkey" = "Selector de color";
+"settings.pixelRuler" = "Regla de píxeles";
+"settings.timedCapture" = "Captura temporizada";
+"settings.activeWindowCapture" = "Captura de ventana activa";
 "settings.recording" = "Grabando...";
 "settings.permissions" = "Permiso de accesibilidad requerido";
 "settings.permissions.description" = "Shutter necesita acceso de accesibilidad para los atajos globales.";

@@ -95,6 +95,12 @@
 "settings.autoPasteCapture" = "Auto-Einfügen-Aufnahme";
 "settings.ocrPasteCapture" = "OCR-Einfügen-Aufnahme";
 "settings.allScreensCapture" = "Alle Bildschirme aufnehmen";
+"settings.scrollingCapture" = "Scrollende Aufnahme";
+"settings.ocrCapture" = "OCR-Aufnahme";
+"settings.colorPickerHotkey" = "Farbwähler";
+"settings.pixelRuler" = "Pixellineal";
+"settings.timedCapture" = "Zeitgesteuerte Aufnahme";
+"settings.activeWindowCapture" = "Aktives Fenster aufnehmen";
 "settings.recording" = "Aufnahme...";
 "settings.permissions" = "Bedienungshilfen-Berechtigung erforderlich";
 "settings.permissions.description" = "Shutter benötigt Bedienungshilfen-Zugriff für globale Tastenkürzel.";

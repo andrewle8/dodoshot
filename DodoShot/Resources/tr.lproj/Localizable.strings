@@ -95,6 +95,12 @@
 "settings.autoPasteCapture" = "Otomatik yapıştırma yakalama";
 "settings.ocrPasteCapture" = "OCR yapıştırma yakalama";
 "settings.allScreensCapture" = "Tüm ekranları yakala";
+"settings.scrollingCapture" = "Kaydırmalı yakalama";
+"settings.ocrCapture" = "OCR yakalama";
+"settings.colorPickerHotkey" = "Renk seçici";
+"settings.pixelRuler" = "Piksel cetveli";
+"settings.timedCapture" = "Zamanlı yakalama";
+"settings.activeWindowCapture" = "Aktif pencere yakalama";
 "settings.recording" = "Kaydediliyor...";
 "settings.permissions" = "Erişilebilirlik izni gerekli";
 "settings.permissions.description" = "Shutter'un global kısayolları çalışması için erişilebilirlik izni gereklidir.";

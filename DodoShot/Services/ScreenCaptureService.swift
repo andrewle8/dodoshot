@@ -50,6 +50,21 @@ class ScreenCaptureService: ObservableObject {
         startOCRCapture()
     }
 
+    /// Capture the frontmost (active) window without showing the window picker
+    func captureActiveWindow() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+
+        let windows = WindowInfo.getVisibleWindows()
+        if let frontmostWindow = windows.first(where: { $0.ownerName != "Shutter" && $0.ownerName != "DodoShot" }) {
+            captureWindow(frontmostWindow)
+        } else if let firstWindow = windows.first {
+            captureWindow(firstWindow)
+        } else {
+            isCapturing = false
+        }
+    }
+
     /// Capture all screens into a single image
     func captureAllScreens() {
         isCapturing = true

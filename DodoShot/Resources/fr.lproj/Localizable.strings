@@ -95,6 +95,12 @@
 "settings.autoPasteCapture" = "Capture et collage auto";
 "settings.ocrPasteCapture" = "Capture OCR et collage";
 "settings.allScreensCapture" = "Capture de tous les écrans";
+"settings.scrollingCapture" = "Capture défilante";
+"settings.ocrCapture" = "Capture OCR";
+"settings.colorPickerHotkey" = "Pipette de couleur";
+"settings.pixelRuler" = "Règle de pixels";
+"settings.timedCapture" = "Capture minutée";
+"settings.activeWindowCapture" = "Capture de la fenêtre active";
 "settings.recording" = "Enregistrement...";
 "settings.permissions" = "Autorisation d'accessibilité requise";
 "settings.permissions.description" = "Shutter nécessite l'accès à l'accessibilité pour les raccourcis globaux.";
