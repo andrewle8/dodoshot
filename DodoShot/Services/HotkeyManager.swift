@@ -94,6 +94,16 @@ class HotkeyManager {
             }
             hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
         }
+
+        // All screens capture
+        if let parsed = HotkeyManager.parseHotkeyString(settings.allScreensCapture) {
+            let action: () -> Void = {
+                DispatchQueue.main.async {
+                    ScreenCaptureService.shared.captureAllScreens()
+                }
+            }
+            hotkeyBindings[parsed.keyCode, default: []].append((parsed.modifiers, action))
+        }
     }
 
     private static func handleEvent(

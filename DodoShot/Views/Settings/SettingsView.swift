@@ -447,6 +447,16 @@ struct HotkeysSettingsTab: View {
                             iconColor: .green,
                             hotkey: $settingsManager.settings.hotkeys.fullscreenCapture
                         )
+
+                        Divider()
+                            .padding(.vertical, 12)
+
+                        HotkeyRow(
+                            label: L10n.Settings.allScreensCapture,
+                            icon: "rectangle.on.rectangle",
+                            iconColor: .green,
+                            hotkey: $settingsManager.settings.hotkeys.allScreensCapture
+                        )
                     }
                 }
 

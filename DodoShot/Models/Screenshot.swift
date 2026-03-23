@@ -644,13 +644,30 @@ struct HotkeySettings: Codable {
     var areaCapture: String
     var windowCapture: String
     var fullscreenCapture: String
+    var allScreensCapture: String
 
     static var `default`: HotkeySettings {
         HotkeySettings(
             areaCapture: "⌘⇧4",
             windowCapture: "⌘⇧5",
-            fullscreenCapture: "⌘⇧3"
+            fullscreenCapture: "⌘⇧3",
+            allScreensCapture: "⌘⇧⌥3"
         )
+    }
+
+    init(areaCapture: String, windowCapture: String, fullscreenCapture: String, allScreensCapture: String = "⌘⇧⌥3") {
+        self.areaCapture = areaCapture
+        self.windowCapture = windowCapture
+        self.fullscreenCapture = fullscreenCapture
+        self.allScreensCapture = allScreensCapture
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        areaCapture = try container.decode(String.self, forKey: .areaCapture)
+        windowCapture = try container.decode(String.self, forKey: .windowCapture)
+        fullscreenCapture = try container.decode(String.self, forKey: .fullscreenCapture)
+        allScreensCapture = try container.decodeIfPresent(String.self, forKey: .allScreensCapture) ?? "⌘⇧⌥3"
     }
 }
 

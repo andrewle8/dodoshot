@@ -33,6 +33,9 @@ enum L10n {
         static let settings = "menu.settings".localized
         static let quit = "menu.quit".localized
         static let history = "menu.history".localized
+        static let selectScreen = "menu.selectScreen".localized
+        static let allScreens = "menu.allScreens".localized
+        static let mainScreen = "menu.mainScreen".localized
     }
 
     // MARK: - Capture Types
@@ -103,6 +106,7 @@ enum L10n {
         static let areaCapture = "settings.areaCapture".localized
         static let windowCapture = "settings.windowCapture".localized
         static let fullscreenCapture = "settings.fullscreenCapture".localized
+        static let allScreensCapture = "settings.allScreensCapture".localized
         static let recording = "settings.recording".localized
         static let permissions = "settings.permissions".localized
         static let permissionsDescription = "settings.permissions.description".localized

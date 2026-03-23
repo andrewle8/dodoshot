@@ -23,6 +23,9 @@
 "menu.ready" = "Bereit zum Aufnehmen";
 "menu.scrolling.description" = "Lange Seiten aufnehmen";
 "menu.clearHistory" = "Verlauf löschen";
+"menu.selectScreen" = "Bildschirm auswählen";
+"menu.allScreens" = "Alle Bildschirme";
+"menu.mainScreen" = "Haupt";
 
 // MARK: - Capture Types
 "capture.area" = "Bereich";
@@ -87,6 +90,7 @@
 "settings.areaCapture" = "Bereichsaufnahme";
 "settings.windowCapture" = "Fensteraufnahme";
 "settings.fullscreenCapture" = "Vollbildaufnahme";
+"settings.allScreensCapture" = "Alle Bildschirme aufnehmen";
 "settings.recording" = "Aufnahme...";
 "settings.permissions" = "Bedienungshilfen-Berechtigung erforderlich";
 "settings.permissions.description" = "Shutter benötigt Bedienungshilfen-Zugriff für globale Tastenkürzel.";

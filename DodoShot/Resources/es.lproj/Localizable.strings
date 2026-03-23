@@ -23,6 +23,9 @@
 "menu.ready" = "Listo para capturar";
 "menu.scrolling.description" = "Capturar páginas largas";
 "menu.clearHistory" = "Borrar historial";
+"menu.selectScreen" = "Seleccionar pantalla";
+"menu.allScreens" = "Todas las pantallas";
+"menu.mainScreen" = "Principal";
 
 // MARK: - Capture Types
 "capture.area" = "Área";
@@ -87,6 +90,7 @@
 "settings.areaCapture" = "Captura de área";
 "settings.windowCapture" = "Captura de ventana";
 "settings.fullscreenCapture" = "Captura de pantalla completa";
+"settings.allScreensCapture" = "Captura de todas las pantallas";
 "settings.recording" = "Grabando...";
 "settings.permissions" = "Permiso de accesibilidad requerido";
 "settings.permissions.description" = "Shutter necesita acceso de accesibilidad para los atajos globales.";

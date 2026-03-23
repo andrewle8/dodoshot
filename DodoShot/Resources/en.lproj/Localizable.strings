@@ -23,6 +23,9 @@
 "menu.ready" = "Ready to capture";
 "menu.scrolling.description" = "Capture long pages";
 "menu.clearHistory" = "Clear history";
+"menu.selectScreen" = "Select screen";
+"menu.allScreens" = "All Screens";
+"menu.mainScreen" = "Main";
 
 // MARK: - Capture Types
 "capture.area" = "Area";
@@ -87,6 +90,7 @@
 "settings.areaCapture" = "Area capture";
 "settings.windowCapture" = "Window capture";
 "settings.fullscreenCapture" = "Fullscreen capture";
+"settings.allScreensCapture" = "All screens capture";
 "settings.recording" = "Recording...";
 "settings.permissions" = "Accessibility permission required";
 "settings.permissions.description" = "Shutter needs accessibility access for global hotkeys to work.";
