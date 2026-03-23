@@ -137,27 +137,41 @@ struct MenuBarView: View {
 
     // MARK: - Tools Section
     private var toolsSection: some View {
-        HStack(spacing: 6) {
-            DarkroomToolButton(icon: "arrow.up.and.down.text.horizontal", tooltip: L10n.Menu.scrolling) {
-                startScrollingCapture()
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                DarkroomToolButton(icon: "arrow.up.and.down.text.horizontal", tooltip: L10n.Menu.scrolling) {
+                    startScrollingCapture()
+                }
+                DarkroomToolButton(icon: "text.viewfinder", tooltip: L10n.Menu.ocr) {
+                    startOCRCapture()
+                }
+                DarkroomToolButton(icon: "eyedropper", tooltip: L10n.Menu.colorPicker) {
+                    startColorPicker()
+                }
+                DarkroomToolButton(icon: "ruler", tooltip: L10n.Menu.ruler) {
+                    startPixelRuler()
+                }
+                DarkroomToolButton(icon: "timer", tooltip: "Timed") {
+                    startTimedCapture()
+                }
+                DarkroomToolButton(icon: "doc.on.clipboard.fill", tooltip: L10n.Menu.paste) {
+                    startCaptureAndPaste()
+                }
+                DarkroomToolButton(icon: "doc.text.viewfinder", tooltip: L10n.Menu.ocrPaste) {
+                    startOCRCaptureAndPaste()
+                }
             }
-            DarkroomToolButton(icon: "text.viewfinder", tooltip: L10n.Menu.ocr) {
-                startOCRCapture()
-            }
-            DarkroomToolButton(icon: "eyedropper", tooltip: L10n.Menu.colorPicker) {
-                startColorPicker()
-            }
-            DarkroomToolButton(icon: "ruler", tooltip: L10n.Menu.ruler) {
-                startPixelRuler()
-            }
-            DarkroomToolButton(icon: "timer", tooltip: "Timed") {
-                startTimedCapture()
-            }
-            DarkroomToolButton(icon: "doc.on.clipboard.fill", tooltip: L10n.Menu.paste) {
-                startCaptureAndPaste()
-            }
-            DarkroomToolButton(icon: "doc.text.viewfinder", tooltip: L10n.Menu.ocrPaste) {
-                startOCRCaptureAndPaste()
+            HStack(spacing: 6) {
+                DarkroomToolButton(icon: "exclamationmark.triangle", tooltip: L10n.Menu.captureError) {
+                    startErrorCapture()
+                }
+                DarkroomToolButton(icon: "terminal", tooltip: L10n.Menu.captureForClaude) {
+                    startCaptureForClaude()
+                }
+                DarkroomToolButton(icon: "chevron.left.forwardslash.chevron.right", tooltip: L10n.Menu.captureCode) {
+                    startCodeCapture()
+                }
+                Spacer()
             }
         }
         .padding(.horizontal, 12)
@@ -307,6 +321,27 @@ struct MenuBarView: View {
         NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             ScreenCaptureService.shared.startOCRCaptureAndPaste()
+        }
+    }
+
+    private func startErrorCapture() {
+        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            ScreenCaptureService.shared.startErrorCapture()
+        }
+    }
+
+    private func startCaptureForClaude() {
+        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            ScreenCaptureService.shared.startCaptureForClaude()
+        }
+    }
+
+    private func startCodeCapture() {
+        NSApp.sendAction(#selector(AppDelegate.closePopover), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            ScreenCaptureService.shared.startCodeCapture()
         }
     }
 

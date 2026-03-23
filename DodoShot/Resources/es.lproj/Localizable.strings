@@ -90,6 +90,10 @@
 "settings.showOverlay.description" = "Mostrar panel de acciones después de capturar";
 "settings.hideDesktopIcons" = "Ocultar iconos del escritorio";
 "settings.hideDesktopIcons.description" = "Ocultar iconos temporalmente durante la captura";
+"settings.freezeScreen" = "Congelar pantalla antes de capturar";
+"settings.freezeScreen.description" = "Capturar el contenido de la pantalla antes de mostrar la selección, preservando tooltips y menús";
+"settings.captureWindowShadow" = "Incluir sombra de ventana";
+"settings.captureWindowShadow.description" = "Incluir la sombra de la ventana en las capturas";
 "settings.storage" = "Almacenamiento";
 "settings.saveLocation" = "Ubicación de guardado";
 "settings.choose" = "Elegir";
@@ -108,6 +112,11 @@
 "settings.pixelRuler" = "Regla de píxeles";
 "settings.timedCapture" = "Captura temporizada";
 "settings.activeWindowCapture" = "Captura de ventana activa";
+"settings.unifiedCapture" = "Captura todo en uno";
+"settings.captureError" = "Capturar texto de error";
+"settings.captureForClaude" = "Captura para Claude";
+"settings.captureCode" = "Capturar bloque de código";
+"settings.recaptureLastArea" = "Recapturar ultima area";
 "settings.recording" = "Grabando...";
 "settings.permissions" = "Permiso de accesibilidad requerido";
 "settings.permissions.description" = "Shutter necesita acceso de accesibilidad para los atajos globales.";
@@ -174,6 +183,7 @@
 
 // MARK: - Area Selection
 "areaSelection.instruction" = "Arrastra para seleccionar • Suelta para capturar";
+"areaSelection.unifiedInstruction" = "Arrastrar = zona • Clic = ventana • Intro = pantalla completa";
 
 // MARK: - Context Menu
 "contextMenu.appearance" = "Apariencia";

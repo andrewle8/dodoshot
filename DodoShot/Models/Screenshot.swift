@@ -414,6 +414,7 @@ struct AppSettings: Codable {
         case freezeScreenBeforeCapture
         case captureWindowShadow
         case quickOverlayAutoDismiss, quickOverlayTimeout
+        case ocrOutputFormat
         // Legacy key for backward compatibility
         case llmApiKey
     }
@@ -470,6 +471,7 @@ struct AppSettings: Codable {
         captureWindowShadow = try container.decodeIfPresent(Bool.self, forKey: .captureWindowShadow) ?? true
         quickOverlayAutoDismiss = try container.decodeIfPresent(Bool.self, forKey: .quickOverlayAutoDismiss) ?? true
         quickOverlayTimeout = try container.decodeIfPresent(Double.self, forKey: .quickOverlayTimeout) ?? 5.0
+        ocrOutputFormat = try container.decodeIfPresent(OCROutputFormat.self, forKey: .ocrOutputFormat) ?? .auto
     }
 
     // Custom encoder - don't encode the computed llmApiKey
@@ -506,6 +508,7 @@ struct AppSettings: Codable {
         try container.encode(captureWindowShadow, forKey: .captureWindowShadow)
         try container.encode(quickOverlayAutoDismiss, forKey: .quickOverlayAutoDismiss)
         try container.encode(quickOverlayTimeout, forKey: .quickOverlayTimeout)
+        try container.encode(ocrOutputFormat, forKey: .ocrOutputFormat)
     }
     var autoCopyToClipboard: Bool
     var hideDesktopIcons: Bool
@@ -534,6 +537,7 @@ struct AppSettings: Codable {
     var captureWindowShadow: Bool
     var quickOverlayAutoDismiss: Bool
     var quickOverlayTimeout: Double
+    var ocrOutputFormat: OCROutputFormat
 
     // Memberwise init (needed because we have custom Codable)
     init(
@@ -567,7 +571,8 @@ struct AppSettings: Codable {
         freezeScreenBeforeCapture: Bool = true,
         captureWindowShadow: Bool = true,
         quickOverlayAutoDismiss: Bool = true,
-        quickOverlayTimeout: Double = 5.0
+        quickOverlayTimeout: Double = 5.0,
+        ocrOutputFormat: OCROutputFormat = .auto
     ) {
         self.anthropicApiKey = anthropicApiKey
         self.openaiApiKey = openaiApiKey
@@ -600,6 +605,7 @@ struct AppSettings: Codable {
         self.captureWindowShadow = captureWindowShadow
         self.quickOverlayAutoDismiss = quickOverlayAutoDismiss
         self.quickOverlayTimeout = quickOverlayTimeout
+        self.ocrOutputFormat = ocrOutputFormat
     }
 
     static var `default`: AppSettings {
@@ -637,7 +643,8 @@ struct AppSettings: Codable {
             freezeScreenBeforeCapture: true,
             captureWindowShadow: true,
             quickOverlayAutoDismiss: true,
-            quickOverlayTimeout: 5.0
+            quickOverlayTimeout: 5.0,
+            ocrOutputFormat: .auto
         )
     }
 

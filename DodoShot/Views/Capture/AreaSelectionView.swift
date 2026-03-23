@@ -7,6 +7,12 @@ private let shutterGreen = Color(red: 0x2E / 255.0, green: 0xD0 / 255.0, blue: 0
 struct AreaSelectionView: View {
     let onComplete: (CGRect) -> Void
     let onCancel: () -> Void
+    /// Optional frozen screen image to display as background (for freeze-before-capture)
+    var frozenBackground: CGImage? = nil
+    /// Called when the user clicks without dragging (all-in-one: window capture)
+    var onWindowClick: ((CGRect) -> Void)? = nil
+    /// Called when the user presses Return (all-in-one: fullscreen capture)
+    var onFullscreen: (() -> Void)? = nil
 
     @State private var startPoint: CGPoint?
     @State private var currentPoint: CGPoint?
@@ -16,6 +22,8 @@ struct AreaSelectionView: View {
     @State private var spaceHeld = false
     /// Anchor recorded when Space is first pressed during a drag (used for repositioning)
     @State private var spaceDragAnchor: CGPoint?
+    /// Tracks whether a real drag happened (mouse moved > threshold after mouseDown)
+    @State private var didDrag = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -29,22 +37,40 @@ struct AreaSelectionView: View {
                         startPoint = location
                         currentPoint = location
                         isDragging = true
+                        didDrag = false
                         spaceDragAnchor = nil
                     },
                     onMouseDragged: { location in
+                        // Check if we've moved enough to count as a real drag
+                        if let start = startPoint {
+                            let dx = abs(location.x - start.x)
+                            let dy = abs(location.y - start.y)
+                            if dx > 5 || dy > 5 {
+                                didDrag = true
+                            }
+                        }
                         handleDrag(to: location)
                     },
                     onMouseUp: { location in
                         if let start = startPoint, let current = currentPoint {
                             let rect = buildSelectionRect(from: start, to: current)
-                            if rect.width > 10 && rect.height > 10 {
+                            if didDrag && rect.width > 10 && rect.height > 10 {
+                                // Normal area capture
                                 onComplete(rect)
+                            } else if !didDrag, let windowClick = onWindowClick {
+                                // Single click with no drag: detect window under cursor
+                                if let windowRect = detectWindowAtPoint(location, screenSize: geometry.size) {
+                                    windowClick(windowRect)
+                                } else {
+                                    onCancel()
+                                }
                             } else {
                                 // Too small, cancel
                                 onCancel()
                             }
                         }
                         isDragging = false
+                        didDrag = false
                         spaceDragAnchor = nil
                     },
                     onEscape: {
@@ -67,8 +93,17 @@ struct AreaSelectionView: View {
                     onSpaceUp: {
                         spaceHeld = false
                         spaceDragAnchor = nil
-                    }
+                    },
+                    onReturnKey: onFullscreen
                 )
+
+                // Frozen background image (when freeze-before-capture is active)
+                if let frozenBG = frozenBackground {
+                    Image(nsImage: NSImage(cgImage: frozenBG, size: geometry.size))
+                        .resizable()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .allowsHitTesting(false)
+                }
 
                 // Semi-transparent overlay
                 Color.black.opacity(0.3)
@@ -104,8 +139,13 @@ struct AreaSelectionView: View {
                 // Instructions
                 if !isDragging {
                     VStack {
-                        InstructionBadge(text: "areaSelection.instruction".localized)
-                            .padding(.top, 60)
+                        if onWindowClick != nil || onFullscreen != nil {
+                            InstructionBadge(text: "areaSelection.unifiedInstruction".localized)
+                                .padding(.top, 60)
+                        } else {
+                            InstructionBadge(text: "areaSelection.instruction".localized)
+                                .padding(.top, 60)
+                        }
                         Spacer()
                     }
                     .allowsHitTesting(false)
@@ -177,6 +217,77 @@ struct AreaSelectionView: View {
 
         startPoint = CGPoint(x: start.x + dx, y: start.y + dy)
         currentPoint = CGPoint(x: current.x + dx, y: current.y + dy)
+    }
+
+    // MARK: - Window detection (all-in-one mode)
+
+    /// Detect the window under the given point (in view coordinates, top-left origin).
+    /// The point is relative to the overlay window's frame; we convert to global display coordinates
+    /// for matching against CGWindowList data.
+    private func detectWindowAtPoint(_ point: CGPoint, screenSize: CGSize) -> CGRect? {
+        guard let windowList = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements],
+            kCGNullWindowID
+        ) as? [[String: Any]] else {
+            return nil
+        }
+
+        let myBundleID = Bundle.main.bundleIdentifier
+        let excludedOwners: Set<String> = ["Dock", "Window Server", "SystemUIServer", "Spotlight"]
+
+        // The overlay window covers a screen. Convert point to global display coordinates.
+        // point is in the view's coordinate space (top-left origin, same as CG display coords
+        // once we add the screen origin). We need the screen this overlay is on.
+        // The screen frame origin is in CG display coordinates (top-left of main = 0,0).
+        // Our overlay window's frame matches screen.frame, so just add screen.frame.origin.
+        // However we don't have direct access to the screen here. The caller (ScreenCaptureService)
+        // already knows the screen. For simplicity, we find the window whose CG bounds contain our point
+        // by checking all screens.
+
+        // Get global point: iterate screens to find which one this overlay is on
+        var globalPoint = point
+        for screen in NSScreen.screens {
+            if abs(screen.frame.size.width - screenSize.width) < 2 &&
+               abs(screen.frame.size.height - screenSize.height) < 2 {
+                globalPoint = CGPoint(
+                    x: point.x + screen.frame.origin.x,
+                    y: point.y + screen.frame.origin.y
+                )
+                break
+            }
+        }
+
+        for dict in windowList {
+            guard let boundsDict = dict[kCGWindowBounds as String] as? [String: Any],
+                  let x = boundsDict["X"] as? CGFloat,
+                  let y = boundsDict["Y"] as? CGFloat,
+                  let width = boundsDict["Width"] as? CGFloat,
+                  let height = boundsDict["Height"] as? CGFloat else {
+                continue
+            }
+
+            let ownerName = dict[kCGWindowOwnerName as String] as? String ?? ""
+            let ownerPID = dict[kCGWindowOwnerPID as String] as? pid_t ?? 0
+            let bundleID = NSRunningApplication(processIdentifier: ownerPID)?.bundleIdentifier
+
+            // Skip our own windows, system processes, and tiny windows
+            if bundleID == myBundleID { continue }
+            if excludedOwners.contains(ownerName) { continue }
+            if width < 100 || height < 100 { continue }
+
+            let windowFrame = CGRect(x: x, y: y, width: width, height: height)
+            if windowFrame.contains(globalPoint) {
+                // Return rect in the overlay's local coordinate space (subtract screen origin)
+                return CGRect(
+                    x: windowFrame.origin.x - (globalPoint.x - point.x),
+                    y: windowFrame.origin.y - (globalPoint.y - point.y),
+                    width: windowFrame.width,
+                    height: windowFrame.height
+                )
+            }
+        }
+
+        return nil
     }
 
     // MARK: - Helpers
@@ -364,6 +475,7 @@ struct MouseTrackingView: NSViewRepresentable {
     var onArrowKey: ((ArrowDirection, Bool) -> Void)? = nil
     var onSpaceDown: (() -> Void)? = nil
     var onSpaceUp: (() -> Void)? = nil
+    var onReturnKey: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> MouseTrackingNSView {
         let view = MouseTrackingNSView()
@@ -376,6 +488,7 @@ struct MouseTrackingView: NSViewRepresentable {
         view.onArrowKey = onArrowKey
         view.onSpaceDown = onSpaceDown
         view.onSpaceUp = onSpaceUp
+        view.onReturnKey = onReturnKey
         return view
     }
 
@@ -392,6 +505,7 @@ class MouseTrackingNSView: NSView {
     var onArrowKey: ((ArrowDirection, Bool) -> Void)?
     var onSpaceDown: (() -> Void)?
     var onSpaceUp: (() -> Void)?
+    var onReturnKey: (() -> Void)?
 
     private var trackingArea: NSTrackingArea?
     private var spaceIsDown = false
@@ -473,6 +587,12 @@ class MouseTrackingNSView: NSView {
         if event.keyCode == 53 { // ESC key
             onEscape?()
             // Don't call super - consume the event to prevent app termination
+            return
+        }
+
+        // Return/Enter key (keyCode 36) for fullscreen capture in all-in-one mode
+        if event.keyCode == 36 {
+            onReturnKey?()
             return
         }
 

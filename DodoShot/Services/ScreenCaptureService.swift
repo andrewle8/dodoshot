@@ -14,6 +14,9 @@ class ScreenCaptureService: ObservableObject {
     private var previousApp: NSRunningApplication?
     private var autoPasteAfterCapture = false
     private var ocrPasteAfterCapture = false
+    private var ocrForceType: DetectedContentType? = nil
+    /// Per-screen frozen images captured before showing the selection overlay
+    private var frozenScreenImages: [NSScreen: CGImage] = [:]
 
     private init() {}
 
@@ -48,6 +51,118 @@ class ScreenCaptureService: ObservableObject {
     func startOCRCaptureAndPaste() {
         ocrPasteAfterCapture = true
         startOCRCapture()
+    }
+
+    /// Capture area, OCR as error/log, copy formatted text and paste
+    func startErrorCapture() {
+        ocrForceType = .errorLog
+        ocrPasteAfterCapture = true
+        startOCRCapture()
+    }
+
+    /// Capture area, OCR as code block, copy formatted text and paste
+    func startCodeCapture() {
+        ocrForceType = .code
+        ocrPasteAfterCapture = true
+        startOCRCapture()
+    }
+
+    /// Capture area, save to /tmp, paste file path into terminal
+    func startCaptureForClaude() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        captureForClaudeMode = true
+        startCapture(type: .area)
+    }
+
+    /// All-in-one capture: drag=area, click=window, Return=fullscreen
+    func startUnifiedCapture() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+
+        closeCaptureWindows()
+        frozenScreenImages.removeAll()
+
+        let freezeEnabled = SettingsManager.shared.settings.freezeScreenBeforeCapture
+        let screens = NSScreen.screens
+
+        if freezeEnabled {
+            for screen in screens {
+                if let cgImage = CGWindowListCreateImage(
+                    screen.frame,
+                    .optionOnScreenOnly,
+                    kCGNullWindowID,
+                    [.bestResolution]
+                ) {
+                    frozenScreenImages[screen] = cgImage
+                }
+            }
+        }
+
+        for screen in screens {
+            let window = createCaptureOverlayWindow(for: screen)
+            let frozenImage = frozenScreenImages[screen]
+            let contentView = AreaSelectionView(
+                onComplete: { [weak self] rect in
+                    self?.captureArea(rect: rect, screen: screen)
+                },
+                onCancel: { [weak self] in
+                    self?.cancelCapture()
+                },
+                frozenBackground: frozenImage,
+                onWindowClick: { [weak self] windowRect in
+                    self?.captureArea(rect: windowRect, screen: screen)
+                },
+                onFullscreen: { [weak self] in
+                    self?.closeCaptureWindows()
+                    self?.captureFullscreen(screen: screen)
+                }
+            )
+
+            window.contentView = NSHostingView(rootView: contentView)
+            window.makeKeyAndOrderFront(nil)
+            captureWindows.append(window)
+        }
+    }
+
+    /// Re-capture the same area as the last area capture
+    func recaptureLastArea() {
+        guard let rect = lastCaptureRect, let screen = lastCaptureScreen else {
+            startCapture(type: .area)
+            return
+        }
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+        captureArea(rect: rect, screen: screen)
+    }
+
+    private var captureForClaudeMode = false
+    private var lastCaptureRect: CGRect?
+    private var lastCaptureScreen: NSScreen?
+
+    /// Start scrolling OCR: select an area, then auto-scroll and OCR each frame,
+    /// deduplicating overlapping text between frames.
+    func startScrollingOCR() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        isCapturing = true
+
+        guard let screen = NSScreen.main else {
+            isCapturing = false
+            return
+        }
+
+        let window = createCaptureOverlayWindow(for: screen)
+        let contentView = AreaSelectionView(
+            onComplete: { [weak self] rect in
+                self?.beginScrollingOCRForArea(rect: rect, screen: screen)
+            },
+            onCancel: { [weak self] in
+                self?.cancelCapture()
+            }
+        )
+
+        window.contentView = NSHostingView(rootView: contentView)
+        window.makeKeyAndOrderFront(nil)
+        captureWindows.append(window)
     }
 
     /// Capture the frontmost non-Shutter window immediately (no picker UI).
@@ -267,7 +382,6 @@ class ScreenCaptureService: ObservableObject {
             guard let self = self else { return }
 
             // Convert to global display coordinates
-            // Both SwiftUI and CGWindowListCreateImage use top-left origin with Y increasing downward
             let screenRect = CGRect(
                 x: rect.origin.x + screen.frame.origin.x,
                 y: rect.origin.y + screen.frame.origin.y,
@@ -291,19 +405,26 @@ class ScreenCaptureService: ObservableObject {
             self.closeCaptureWindows()
             self.isCapturing = false
 
-            // Perform OCR
+            // Perform OCR with format settings
             let shouldPaste = self.ocrPasteAfterCapture
+            let forceType = self.ocrForceType
             self.ocrPasteAfterCapture = false
+            self.ocrForceType = nil
 
-            OCRService.shared.extractText(from: nsImage) { result in
+            let format = SettingsManager.shared.settings.ocrOutputFormat
+
+            OCRService.shared.extractText(
+                from: nsImage,
+                format: format,
+                forceType: forceType
+            ) { result in
                 switch result {
-                case .success(let text):
-                    // Copy to clipboard
-                    OCRService.shared.copyToClipboard(text)
+                case .success(let ocrResult):
+                    OCRService.shared.copyToClipboard(ocrResult.formattedText)
                     if shouldPaste {
                         self.pasteToFrontApp()
                     } else {
-                        self.showOCRResult(text: text)
+                        self.showOCRResult(ocrResult: ocrResult)
                     }
                 case .failure(let error):
                     self.showOCRError(error: error)
@@ -312,10 +433,10 @@ class ScreenCaptureService: ObservableObject {
         }
     }
 
-    private func showOCRResult(text: String) {
+    private func showOCRResult(ocrResult: OCRResult) {
         guard let screen = NSScreen.main else { return }
 
-        let windowSize = NSSize(width: 400, height: 300)
+        let windowSize = NSSize(width: 460, height: 340)
         let windowOrigin = NSPoint(
             x: (screen.visibleFrame.width - windowSize.width) / 2 + screen.visibleFrame.origin.x,
             y: (screen.visibleFrame.height - windowSize.height) / 2 + screen.visibleFrame.origin.y
@@ -332,7 +453,7 @@ class ScreenCaptureService: ObservableObject {
         window.level = .floating
         window.isReleasedWhenClosed = false
 
-        let resultView = OCRResultView(text: text) {
+        let resultView = OCRResultView(ocrResult: ocrResult) {
             window.close()
         }
 
@@ -380,20 +501,39 @@ class ScreenCaptureService: ObservableObject {
     private func startAreaCapture() {
         // Close any existing capture windows first
         closeCaptureWindows()
+        frozenScreenImages.removeAll()
+
+        let freezeEnabled = SettingsManager.shared.settings.freezeScreenBeforeCapture
 
         // Get all screens for multi-monitor support
         let screens = NSScreen.screens
 
+        // If freeze is enabled, capture each screen BEFORE showing overlays
+        if freezeEnabled {
+            for screen in screens {
+                if let cgImage = CGWindowListCreateImage(
+                    screen.frame,
+                    .optionOnScreenOnly,
+                    kCGNullWindowID,
+                    [.bestResolution]
+                ) {
+                    frozenScreenImages[screen] = cgImage
+                }
+            }
+        }
+
         // Create overlay windows for each screen
         for screen in screens {
             let window = createCaptureOverlayWindow(for: screen)
+            let frozenImage = frozenScreenImages[screen]
             let contentView = AreaSelectionView(
                 onComplete: { [weak self] rect in
                     self?.captureArea(rect: rect, screen: screen)
                 },
                 onCancel: { [weak self] in
                     self?.cancelCapture()
-                }
+                },
+                frozenBackground: frozenImage
             )
 
             window.contentView = NSHostingView(rootView: contentView)
@@ -425,6 +565,9 @@ class ScreenCaptureService: ObservableObject {
     }
 
     private func captureArea(rect: CGRect, screen: NSScreen) {
+        lastCaptureRect = rect
+        lastCaptureScreen = screen
+
         // Hide all capture windows first
         for window in captureWindows {
             window.orderOut(nil)
@@ -575,6 +718,138 @@ class ScreenCaptureService: ObservableObject {
         }
     }
 
+    // MARK: - Scrolling OCR
+
+    private func beginScrollingOCRForArea(rect: CGRect, screen: NSScreen) {
+        // Hide capture overlay windows
+        for window in captureWindows {
+            window.orderOut(nil)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else { return }
+            self.closeCaptureWindows()
+
+            // Convert to global display coordinates
+            let globalRect = CGRect(
+                x: round(rect.origin.x) + screen.frame.origin.x,
+                y: round(rect.origin.y) + screen.frame.origin.y,
+                width: round(rect.width),
+                height: round(rect.height)
+            )
+
+            // Scrolling OCR loop
+            self.runScrollingOCRLoop(
+                rect: globalRect,
+                pointSize: rect.size,
+                accumulatedText: "",
+                frameCount: 0,
+                maxFrames: 15,
+                previousText: ""
+            )
+        }
+    }
+
+    private func runScrollingOCRLoop(
+        rect: CGRect,
+        pointSize: CGSize,
+        accumulatedText: String,
+        frameCount: Int,
+        maxFrames: Int,
+        previousText: String
+    ) {
+        guard frameCount < maxFrames else {
+            finishScrollingOCR(text: accumulatedText)
+            return
+        }
+
+        // Capture the area
+        guard let cgImage = CGWindowListCreateImage(
+            rect,
+            .optionOnScreenBelowWindow,
+            kCGNullWindowID,
+            [.bestResolution]
+        ) else {
+            finishScrollingOCR(text: accumulatedText)
+            return
+        }
+
+        let nsImage = NSImage(cgImage: cgImage, size: pointSize)
+        let format = SettingsManager.shared.settings.ocrOutputFormat
+
+        OCRService.shared.extractText(from: nsImage, format: format, forceType: nil) { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .success(let ocrResult):
+                let newText = ocrResult.rawText
+
+                // Check if content stopped changing (scroll reached the end)
+                if newText == previousText {
+                    self.finishScrollingOCR(text: accumulatedText)
+                    return
+                }
+
+                // Merge with deduplication
+                let merged = OCRService.mergeScrollingOCRText(
+                    existing: accumulatedText,
+                    newText: newText
+                )
+
+                // Scroll down
+                self.sendScrollEvent(amount: -5)
+
+                // Wait for scroll to settle, then capture next frame
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    self.runScrollingOCRLoop(
+                        rect: rect,
+                        pointSize: pointSize,
+                        accumulatedText: merged,
+                        frameCount: frameCount + 1,
+                        maxFrames: maxFrames,
+                        previousText: newText
+                    )
+                }
+
+            case .failure:
+                // If OCR fails on a frame, finish with what we have
+                self.finishScrollingOCR(text: accumulatedText)
+            }
+        }
+    }
+
+    private func sendScrollEvent(amount: Int32) {
+        let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: amount, wheel2: 0, wheel3: 0)
+        event?.post(tap: .cgSessionEventTap)
+    }
+
+    private func finishScrollingOCR(text: String) {
+        isCapturing = false
+
+        guard !text.isEmpty else {
+            showOCRError(error: OCRError.noTextFound)
+            return
+        }
+
+        let lines = text.components(separatedBy: "\n")
+        let result = OCRResult(
+            rawText: text,
+            formattedText: text,
+            detectedType: .prose,
+            detectedLanguage: nil,
+            lineCount: lines.count
+        )
+
+        OCRService.shared.copyToClipboard(result.formattedText)
+
+        if ocrPasteAfterCapture {
+            ocrPasteAfterCapture = false
+            pasteToFrontApp()
+        } else {
+            showOCRResult(ocrResult: result)
+        }
+    }
+
     // MARK: - Fullscreen Capture
 
     /// Capture a single screen. Pass nil to capture the main screen.
@@ -704,6 +979,20 @@ class ScreenCaptureService: ObservableObject {
             return
         }
 
+        // Capture for Claude: save to /tmp, paste file path
+        if captureForClaudeMode {
+            captureForClaudeMode = false
+            let timestamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+            let filePath = "/tmp/shutter-capture-\(timestamp).png"
+            try? pngData.write(to: URL(fileURLWithPath: filePath))
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(filePath, forType: .string)
+            isCapturing = false
+            pasteToFrontApp()
+            NSLog("[ScreenCaptureService] completeCapture finished (capture-for-claude: %@)", filePath)
+            return
+        }
+
         // Auto copy to clipboard
         if SettingsManager.shared.settings.autoCopyToClipboard {
             copyToClipboard(screenshot)
@@ -806,45 +1095,96 @@ import SwiftUI
 
 // MARK: - OCR Result View
 struct OCRResultView: View {
-    let text: String
+    let ocrResult: OCRResult
     let onDismiss: () -> Void
 
     @State private var copied = false
+    @State private var showRaw = false
+
+    private var displayText: String {
+        showRaw ? ocrResult.rawText : ocrResult.formattedText
+    }
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
+        VStack(spacing: 12) {
+            // Header with type indicator
+            HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                 Text("Text copied to clipboard")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
+
                 Spacer()
+
+                // Detected type badge
+                HStack(spacing: 4) {
+                    Image(systemName: ocrResult.detectedType.icon)
+                        .font(.system(size: 10))
+                    Text(ocrResult.detectedType.rawValue)
+                        .font(.system(size: 11, weight: .medium))
+                    if let lang = ocrResult.detectedLanguage {
+                        Text("(\(lang))")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .foregroundColor(.cyan)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.cyan.opacity(0.12))
+                )
             }
 
+            // Text preview
             ScrollView {
-                Text(text)
-                    .font(.system(size: 13, design: .monospaced))
+                Text(displayText)
+                    .font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(12)
+                    .padding(10)
             }
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.primary.opacity(0.05))
             )
 
+            // Line count
             HStack {
+                Text("\(ocrResult.lineCount) lines")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                // Toggle raw/formatted
+                if ocrResult.rawText != ocrResult.formattedText {
+                    Button(action: { showRaw.toggle() }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: showRaw ? "doc.richtext" : "doc.plaintext")
+                            Text(showRaw ? "Formatted" : "Raw")
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Action buttons
+            HStack(spacing: 8) {
                 Button(action: {
-                    OCRService.shared.copyToClipboard(text)
+                    OCRService.shared.copyToClipboard(displayText)
                     copied = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         copied = false
                     }
                 }) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         Image(systemName: copied ? "checkmark" : "doc.on.clipboard")
-                        Text(copied ? "Copied" : "Copy again")
+                        Text(copied ? "Copied" : "Copy")
                     }
                     .font(.system(size: 12, weight: .medium))
                 }
@@ -864,8 +1204,8 @@ struct OCRResultView: View {
                 .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(20)
-        .frame(width: 400, height: 300)
+        .padding(16)
+        .frame(width: 460, height: 340)
     }
 }
 

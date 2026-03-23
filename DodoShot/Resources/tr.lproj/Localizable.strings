@@ -22,6 +22,9 @@
 "menu.history" = "Geçmiş";
 "menu.paste" = "Yapıştır";
 "menu.ocrPaste" = "OCR Paste";
+"menu.captureError" = "Hata yakala";
+"menu.captureForClaude" = "Claude için yakala";
+"menu.captureCode" = "Kod yakala";
 "menu.selectScreen" = "Ekran seç";
 "menu.allScreens" = "Tüm Ekranlar";
 "menu.mainScreen" = "Ana";
@@ -43,6 +46,10 @@
 "overlay.close" = "Kapat";
 "overlay.justNow" = "Az önce";
 "overlay.copied" = "Kopyalandı";
+"overlay.backdrop.none" = "Yok";
+"overlay.backdrop.white" = "Beyaz";
+"overlay.backdrop.dark" = "Koyu";
+"overlay.backdrop.gradient" = "Gradyan";
 
 // MARK: - Annotation Editor
 "annotation.title" = "Düzenleme Aracı";
@@ -83,6 +90,10 @@
 "settings.showOverlay.description" = "Yakalamadan sonra eylem panelini göster";
 "settings.hideDesktopIcons" = "Masaüstü simgelerini gizle";
 "settings.hideDesktopIcons.description" = "Tam ekran yakalama sırasında simgeleri geçici olarak gizle";
+"settings.freezeScreen" = "Yakalamadan önce ekranı dondur";
+"settings.freezeScreen.description" = "Seçim gösterilmeden önce ekran içeriğini yakala, araç ipuçlarını ve menüleri koru";
+"settings.captureWindowShadow" = "Pencere golgesini dahil et";
+"settings.captureWindowShadow.description" = "Pencere yakalamalarinda pencere golgesini dahil et";
 "settings.storage" = "Depolama";
 "settings.saveLocation" = "Kayıt konumu";
 "settings.choose" = "Seç";
@@ -101,6 +112,11 @@
 "settings.pixelRuler" = "Piksel cetveli";
 "settings.timedCapture" = "Zamanlı yakalama";
 "settings.activeWindowCapture" = "Aktif pencere yakalama";
+"settings.unifiedCapture" = "Hepsi bir arada yakalama";
+"settings.captureError" = "Hata metnini yakala";
+"settings.captureForClaude" = "Claude için yakala";
+"settings.captureCode" = "Kod bloğu yakala";
+"settings.recaptureLastArea" = "Son alani yeniden yakala";
 "settings.recording" = "Kaydediliyor...";
 "settings.permissions" = "Erişilebilirlik izni gerekli";
 "settings.permissions.description" = "Shutter'un global kısayolları çalışması için erişilebilirlik izni gereklidir.";
@@ -167,6 +183,7 @@
 
 // MARK: - Area Selection
 "areaSelection.instruction" = "Seçmek için sürükle • Yakalamak için bırak";
+"areaSelection.unifiedInstruction" = "Sürükle = alan • Tıkla = pencere • Enter = tam ekran";
 
 // MARK: - Context Menu
 "contextMenu.appearance" = "Görünüm";

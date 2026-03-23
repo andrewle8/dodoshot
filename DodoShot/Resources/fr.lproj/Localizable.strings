@@ -22,6 +22,9 @@
 "menu.history" = "Historique";
 "menu.paste" = "Coller";
 "menu.ocrPaste" = "OCR Paste";
+"menu.captureError" = "Capturer une erreur";
+"menu.captureForClaude" = "Capture pour Claude";
+"menu.captureCode" = "Capturer du code";
 "menu.selectScreen" = "Choisir un écran";
 "menu.allScreens" = "Tous les écrans";
 "menu.mainScreen" = "Principal";
@@ -43,6 +46,10 @@
 "overlay.close" = "Fermer";
 "overlay.justNow" = "À l'instant";
 "overlay.copied" = "Copié";
+"overlay.backdrop.none" = "Aucun";
+"overlay.backdrop.white" = "Blanc";
+"overlay.backdrop.dark" = "Sombre";
+"overlay.backdrop.gradient" = "Dégradé";
 
 // MARK: - Annotation Editor
 "annotation.title" = "Éditeur d'annotations";
@@ -83,6 +90,10 @@
 "settings.showOverlay.description" = "Afficher le panneau d'actions après la capture";
 "settings.hideDesktopIcons" = "Masquer les icônes du bureau";
 "settings.hideDesktopIcons.description" = "Masquer temporairement les icônes pendant la capture plein écran";
+"settings.freezeScreen" = "Geler l'écran avant la capture";
+"settings.freezeScreen.description" = "Capturer le contenu de l'écran avant d'afficher la sélection, préservant les infobulles et menus";
+"settings.captureWindowShadow" = "Inclure l'ombre de la fenêtre";
+"settings.captureWindowShadow.description" = "Inclure l'ombre de la fenêtre dans les captures";
 "settings.storage" = "Stockage";
 "settings.saveLocation" = "Emplacement de sauvegarde";
 "settings.choose" = "Choisir";
@@ -101,6 +112,11 @@
 "settings.pixelRuler" = "Règle de pixels";
 "settings.timedCapture" = "Capture minutée";
 "settings.activeWindowCapture" = "Capture de la fenêtre active";
+"settings.unifiedCapture" = "Capture tout-en-un";
+"settings.captureError" = "Capturer le texte d'erreur";
+"settings.captureForClaude" = "Capture pour Claude";
+"settings.captureCode" = "Capturer un bloc de code";
+"settings.recaptureLastArea" = "Recapturer la dernière zone";
 "settings.recording" = "Enregistrement...";
 "settings.permissions" = "Autorisation d'accessibilité requise";
 "settings.permissions.description" = "Shutter nécessite l'accès à l'accessibilité pour les raccourcis globaux.";
@@ -167,6 +183,7 @@
 
 // MARK: - Area Selection
 "areaSelection.instruction" = "Glissez pour sélectionner • Relâchez pour capturer";
+"areaSelection.unifiedInstruction" = "Glisser = zone • Clic = fenêtre • Entrée = plein écran";
 
 // MARK: - Context Menu
 "contextMenu.appearance" = "Apparence";

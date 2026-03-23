@@ -163,6 +163,41 @@ class HotkeyManager {
             }))
         }
 
+        // Error capture (OCR area, force error/log format, paste)
+        if let parsed = HotkeyManager.parseHotkeyString(settings.captureError) {
+            allDefs.append(HotkeyDef(displayString: settings.captureError, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startErrorCapture() }
+            }))
+        }
+
+        // Code capture (OCR area, force code block format, paste)
+        if let parsed = HotkeyManager.parseHotkeyString(settings.captureCode) {
+            allDefs.append(HotkeyDef(displayString: settings.captureCode, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCodeCapture() }
+            }))
+        }
+
+        // Unified capture (all-in-one: drag=area, click=window, Return=fullscreen)
+        if let parsed = HotkeyManager.parseHotkeyString(settings.unifiedCapture) {
+            allDefs.append(HotkeyDef(displayString: settings.unifiedCapture, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startUnifiedCapture() }
+            }))
+        }
+
+        // Capture for Claude (save to /tmp -> paste path)
+        if let parsed = HotkeyManager.parseHotkeyString(settings.captureForClaude) {
+            allDefs.append(HotkeyDef(displayString: settings.captureForClaude, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.startCaptureForClaude() }
+            }))
+        }
+
+        // Re-capture last area
+        if let parsed = HotkeyManager.parseHotkeyString(settings.recaptureLastArea) {
+            allDefs.append(HotkeyDef(displayString: settings.recaptureLastArea, keyCode: parsed.keyCode, modifiers: parsed.modifiers, action: {
+                DispatchQueue.main.async { ScreenCaptureService.shared.recaptureLastArea() }
+            }))
+        }
+
         // Detect conflicts: group by (keyCode, modifiers) and only register the first binding per group
         var seen: [String: String] = [:]  // "keyCode:modifiers" -> first display string
         for def in allDefs {

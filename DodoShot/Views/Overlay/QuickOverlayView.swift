@@ -1,6 +1,90 @@
 import SwiftUI
 import AppKit
 
+// MARK: - Backdrop Style
+enum QuickBackdropStyle: String, CaseIterable {
+    case none
+    case white
+    case dark
+    case gradient
+
+    var label: String {
+        switch self {
+        case .none: return L10n.Overlay.Backdrop.none
+        case .white: return L10n.Overlay.Backdrop.white
+        case .dark: return L10n.Overlay.Backdrop.dark
+        case .gradient: return L10n.Overlay.Backdrop.gradient
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .none: return "xmark.circle"
+        case .white: return "sun.max"
+        case .dark: return "moon.fill"
+        case .gradient: return "paintbrush"
+        }
+    }
+
+    var previewColor: Color {
+        switch self {
+        case .none: return .clear
+        case .white: return .white
+        case .dark: return Color(white: 0.15)
+        case .gradient: return .purple
+        }
+    }
+
+    /// Apply this backdrop style to an image, returning a new image with padding and shadow
+    func apply(to image: NSImage) -> NSImage {
+        if self == .none { return image }
+
+        let padding: CGFloat = 40
+        let newSize = NSSize(
+            width: image.size.width + padding * 2,
+            height: image.size.height + padding * 2
+        )
+        let result = NSImage(size: newSize)
+        result.lockFocus()
+
+        // Fill background
+        switch self {
+        case .none:
+            break
+        case .white:
+            NSColor.white.setFill()
+            NSRect(origin: .zero, size: newSize).fill()
+        case .dark:
+            NSColor(white: 0.12, alpha: 1.0).setFill()
+            NSRect(origin: .zero, size: newSize).fill()
+        case .gradient:
+            let gradient = NSGradient(colors: [
+                NSColor(red: 0.4, green: 0.2, blue: 0.8, alpha: 1.0),
+                NSColor(red: 0.2, green: 0.5, blue: 0.9, alpha: 1.0)
+            ])
+            gradient?.draw(in: NSRect(origin: .zero, size: newSize), angle: 135)
+        }
+
+        // Draw shadow
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 20
+        shadow.shadowOffset = NSSize(width: 0, height: -10)
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.set()
+
+        // Draw image centered
+        image.draw(
+            in: NSRect(x: padding, y: padding, width: image.size.width, height: image.size.height),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1.0
+        )
+
+        result.unlockFocus()
+        return result
+    }
+}
+
 // MARK: - Quick Overlay Manager
 /// Manages multiple stacking overlays like CleanShot X
 class QuickOverlayManager: ObservableObject {
@@ -314,11 +398,27 @@ struct CompactOverlayView: View {
     @State private var showCopiedBadge = false
     @State private var dragOffset: CGSize = .zero
     @State private var isDraggingImage = false
+    @State private var activeBackdrop: QuickBackdropStyle = .none
+    @State private var backdropImage: NSImage?
+
+    /// The effective image (original or with backdrop applied)
+    private var effectiveImage: NSImage {
+        backdropImage ?? screenshot.image
+    }
+
+    /// The effective screenshot (with backdrop applied if any)
+    private var effectiveScreenshot: Screenshot {
+        if let img = backdropImage {
+            return Screenshot(image: img, captureType: screenshot.captureType)
+        }
+        return screenshot
+    }
 
     var body: some View {
+        VStack(spacing: 0) {
         HStack(spacing: 18) {
             // Thumbnail (draggable for drag-and-drop)
-            Image(nsImage: screenshot.image)
+            Image(nsImage: effectiveImage)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 84, height: 84)
@@ -332,7 +432,7 @@ struct CompactOverlayView: View {
                 .onDrag {
                     isDraggingImage = true
                     // Create drag item with image
-                    let provider = NSItemProvider(object: screenshot.image)
+                    let provider = NSItemProvider(object: effectiveImage)
                     return provider
                 }
                 .onChange(of: isDraggingImage) { _, newValue in
@@ -406,8 +506,32 @@ struct CompactOverlayView: View {
                 .transition(.scale.combined(with: .opacity))
             }
         }
+
+            // Backdrop presets row (shown on hover)
+            if isHovered {
+                Divider()
+                    .padding(.horizontal, 4)
+                HStack(spacing: 6) {
+                    Text("Backdrop")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    ForEach(QuickBackdropStyle.allCases, id: \.self) { style in
+                        BackdropPresetButton(
+                            style: style,
+                            isActive: activeBackdrop == style
+                        ) {
+                            applyBackdrop(style)
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.bottom, 2)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        } // end VStack
         .padding(18)
-        .frame(height: 120)
+        .frame(minHeight: 120)
         .background(
             ZStack {
                 // Glass effect
@@ -468,8 +592,20 @@ struct CompactOverlayView: View {
         .opacity(Double(1.0 - (dragOffset.width / 200.0)))
     }
 
+    private func applyBackdrop(_ style: QuickBackdropStyle) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            if style == .none || style == activeBackdrop {
+                activeBackdrop = .none
+                backdropImage = nil
+            } else {
+                activeBackdrop = style
+                backdropImage = style.apply(to: screenshot.image)
+            }
+        }
+    }
+
     private func copyToClipboard() {
-        ScreenCaptureService.shared.copyToClipboard(screenshot)
+        ScreenCaptureService.shared.copyToClipboard(effectiveScreenshot)
         withAnimation(.spring(response: 0.3)) {
             showCopiedBadge = true
         }
@@ -479,8 +615,7 @@ struct CompactOverlayView: View {
     }
 
     private func saveScreenshot() {
-        // Screenshot stores image as Data internally, so no deep copy needed
-        let screenshotToSave = screenshot
+        let screenshotToSave = effectiveScreenshot
         onDismiss()
         ScreenCaptureService.shared.saveToFile(screenshotToSave)
     }
@@ -656,6 +791,39 @@ struct ExpandedOverlayView: View {
 }
 
 // MARK: - Compact Action Button
+// MARK: - Backdrop Preset Button
+struct BackdropPresetButton: View {
+    let style: QuickBackdropStyle
+    let isActive: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                Image(systemName: style.icon)
+                    .font(.system(size: 9, weight: .medium))
+                Text(style.label)
+                    .font(.system(size: 9, weight: .medium))
+            }
+            .foregroundColor(isActive ? .white : isHovered ? .primary : .secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(isActive ? Color.accentColor : Color.primary.opacity(isHovered ? 0.1 : 0.05))
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 struct CompactActionButton: View {
     let icon: String
     let tooltip: String

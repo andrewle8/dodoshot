@@ -170,6 +170,34 @@ struct GeneralSettingsTab: View {
                     }
                 }
 
+                // OCR Section
+                SettingsSection(
+                    icon: "text.viewfinder",
+                    title: "OCR / Text Extraction",
+                    iconColor: .cyan
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Output format")
+                            .font(.system(size: 13, weight: .medium))
+
+                        HStack(spacing: 8) {
+                            ForEach(OCROutputFormat.allCases, id: \.self) { format in
+                                OCRFormatButton(
+                                    format: format,
+                                    isSelected: settingsManager.settings.ocrOutputFormat == format
+                                ) {
+                                    settingsManager.settings.ocrOutputFormat = format
+                                }
+                            }
+                        }
+
+                        Text(ocrFormatDescription(settingsManager.settings.ocrOutputFormat))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                 // Storage Section
                 SettingsSection(
                     icon: "folder",
@@ -273,6 +301,17 @@ struct GeneralSettingsTab: View {
         }
     }
 
+    private func ocrFormatDescription(_ format: OCROutputFormat) -> String {
+        switch format {
+        case .auto:
+            return "Detects code, tables, lists, and errors automatically. Wraps code in fenced blocks with language tags."
+        case .markdown:
+            return "Always formats as Markdown. Code becomes fenced blocks, aligned text becomes tables."
+        case .plain:
+            return "Raw text output with no formatting. Preserves indentation from layout analysis."
+        }
+    }
+
     private func chooseSaveLocation() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -309,6 +348,41 @@ struct ImageFormatButton: View {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isSelected ? Color.orange : Color.primary.opacity(isHovered ? 0.08 : 0.04))
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+// MARK: - OCR Format Button
+struct OCRFormatButton: View {
+    let format: OCROutputFormat
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: format.icon)
+                    .font(.system(size: 11, weight: .medium))
+
+                Text(format.rawValue)
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .foregroundColor(isSelected ? .white : .primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.cyan : Color.primary.opacity(isHovered ? 0.08 : 0.04))
             )
         }
         .buttonStyle(.plain)
